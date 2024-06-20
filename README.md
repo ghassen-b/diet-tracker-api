@@ -18,3 +18,11 @@ docker exec -it test-api-db mysql -u myuser -p
 ```
 
 ... then type the password
+
+# Playing with the API
+
+You can load the provided Diet Tracker API.postman_collection.json in POsstman to play around with the API.
+You will need to set two environment variables:
+- IP
+- PORT
+

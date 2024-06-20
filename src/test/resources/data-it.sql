@@ -1,0 +1,2 @@
+INSERT INTO user(email, first_name, last_name) VALUES ('john.doe@gmail.com', 'John', 'Doe');
+INSERT INTO meal (meal_content, meal_date, meal_eater_id, meal_time) VALUES ('VEGETARIAN', '1968-05-04', 1, 'LUNCH');
