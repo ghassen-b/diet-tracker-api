@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MealService {
     private final MealDAO mealDAO;
 
@@ -70,7 +71,6 @@ public class MealService {
      * @return MealOutDTO representation of the created instance.
      * @throws MealInvalidInputException if the provided input is not valid.
      */
-    @Transactional
     public MealOutDTO createMeal(MealInDTO mealInDTO) {
         try {
             Meal newMeal = mealDAO.save(mealMapper.fromInDTO(mealInDTO));
@@ -85,7 +85,6 @@ public class MealService {
      * 
      * @param id Meal id in the DB.
      */
-    @Transactional
     public void deleteMealById(Long id) {
         mealDAO.delete(findMealById(id));
     }
@@ -98,7 +97,6 @@ public class MealService {
      * @param mealInDTO MealInDTO object containing the wanted new information.
      * @return MealOutDTO representation of the edited instance.
      */
-    @Transactional
     public MealOutDTO editMealById(Long id, MealInDTO mealInDTO) {
         return mealMapper.fromEntity(
                 mealDAO.save(

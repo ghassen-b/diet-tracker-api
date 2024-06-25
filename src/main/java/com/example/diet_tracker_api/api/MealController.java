@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.diet_tracker_api.dto.MealInDTO;
 import com.example.diet_tracker_api.dto.MealOutDTO;
-import com.example.diet_tracker_api.exception.MealInvalidInputException;
 import com.example.diet_tracker_api.service.MealService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /* Controller in charge of handling all requests coming to /meals.
@@ -64,8 +63,7 @@ public class MealController {
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(code = HttpStatus.CREATED)
-    public MealOutDTO createMeal(@RequestBody MealInDTO mealInDTO) {
-        // TODO: add validation and simplify service ?
+    public MealOutDTO createMeal(@Valid @RequestBody MealInDTO mealInDTO) {
         return mealService.createMeal(mealInDTO);
 
     }
@@ -88,24 +86,13 @@ public class MealController {
      * @param id        Meal id in the DB
      * @param mealInDTO MealInDTO object containing the wanted new information.
      * @return MealOutDTO representation of the edited instance.
-     * @throws MealInvalidInputException if the provided input is not valid.
      * 
      */
     @PutMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public MealOutDTO editMealById(@PathVariable("id") Long id, @RequestBody MealInDTO mealInDTO) {
-        try {
-            return mealService.editMealById(id, mealInDTO);
-        } catch (TransactionSystemException e) {
-            /*
-             * Exception structure:
-             * TransactionSystemException
-             * cause: RollbackException
-             * cause: ConstraintViolationException <-- we want this one
-             */
-            // typically when an entity constraint is not OK
-            throw new MealInvalidInputException(mealInDTO, e.getCause().getCause().getMessage());
-        }
+    public MealOutDTO editMealById(@PathVariable("id") Long id, @Valid @RequestBody MealInDTO mealInDTO) {
+        // TODO: return the instance ID, not the full DTO
+        return mealService.editMealById(id, mealInDTO);
 
     }
 }

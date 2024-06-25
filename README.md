@@ -19,6 +19,20 @@ docker exec -it test-api-db mysql -u myuser -p
 
 ... then type the password
 
+# Testing locally
+
+## Running unit tests
+
+```
+mvn test
+```
+
+## Running integration tests
+
+```
+mvn verify
+```
+
 # Playing with the API
 
 You can load the provided Diet Tracker API.postman_collection.json in POsstman to play around with the API.

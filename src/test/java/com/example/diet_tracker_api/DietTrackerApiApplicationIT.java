@@ -1,7 +1,6 @@
 package com.example.diet_tracker_api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
@@ -76,6 +75,19 @@ public class DietTrackerApiApplicationIT {
     }
 
     @Test
+    public void testGetMealById_GivenWrongMealIdType() throws JSONException {
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/meals/1notalong"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
+
+        String expected = "{\"id\":\"Invalid value for parameter 'id': 1notalong\"}";
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(expected, response.getBody());
+
+    }
+
+    @Test
     public void testDeleteMeal_GivenNotExistingMeal() throws JSONException {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/meals/42"),
@@ -142,58 +154,23 @@ public class DietTrackerApiApplicationIT {
         assertEquals("User with id=42 not found", response.getBody());
     }
 
-    /*
-     * Checking that the primary error here is that the user is not found, not the
-     * other missing fields.
-     */
     @Test
-    public void testPostMeal_GivenOnlyUnknownUser() throws JSONException {
+    public void testPostMeal_GivenMissingFields() throws JSONException {
         headers.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/meals"),
                 HttpMethod.POST,
-                new HttpEntity<>("{\"userId\":42}", headers),
-                String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("User with id=42 not found", response.getBody());
-    }
-
-    @SuppressWarnings("null")
-    @Test
-    public void testPostMeal_GivenNoUserField() throws JSONException {
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/meals"),
-                HttpMethod.POST,
-                new HttpEntity<>(
-                        "{\"mealDate\":\"1998-06-21\",\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
+                new HttpEntity<>("{\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
                         headers),
                 String.class);
 
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().contains("Meal creation/update failed because of invalid input."));
-        assertTrue(response.getBody().contains("userId field cannot be null"));
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        JSONAssert.assertEquals(
+                "{\"userId\":\"must not be null\"," +
+                        "\"mealDate\":\"must not be null\"}",
+                response.getBody(), true);
     }
 
-    @SuppressWarnings("null")
-    @Test
-    public void testPostMeal_GivenInvalidDTO() throws JSONException {
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/meals"),
-                HttpMethod.POST,
-                new HttpEntity<>("{\"userId\":1}", headers),
-                String.class);
-
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().contains("Meal creation/update failed because of invalid input."));
-        assertTrue(response.getBody().contains("interpolatedMessage='must not be null', propertyPath=mealContent"));
-        assertTrue(response.getBody().contains("interpolatedMessage='must not be null', propertyPath=mealTime"));
-        assertTrue(response.getBody().contains("interpolatedMessage='must not be null', propertyPath=mealDate"));
-    }
-
-    @SuppressWarnings("null")
     @Test
     public void testPostMeal_GivenInvalidDTOEnumValue() throws JSONException {
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -201,12 +178,33 @@ public class DietTrackerApiApplicationIT {
                 createURLWithPort("/meals"),
                 HttpMethod.POST,
                 new HttpEntity<>(
-                        "{\"userId\":1,\"mealDate\":\"1998-06-21\",\"mealTime\":\"WHATEVER\",\"mealContent\":\"VEGAN\"}",
+                        "{\"userId\":1,\"mealDate\":\"1998-06-21\"," +
+                                "\"mealTime\":\"IDONTEXIST\",\"mealContent\":\"IAMNOTCONSIDERED\"}",
                         headers),
                 String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().contains("Failed to read request"));
+        JSONAssert.assertEquals(
+                "{\"mealTime\":\"Invalid value for field 'mealTime': IDONTEXIST\"}",
+                response.getBody(), true);
+
+    }
+
+    @Test
+    public void testPostMeal_GivenMalformedJSON() throws JSONException {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/meals"),
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        "{toto}",
+                        headers),
+                String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        JSONAssert.assertEquals(
+                "{\"error\": \"Malformed JSON request\"}",
+                response.getBody(), true);
 
     }
 
@@ -229,38 +227,39 @@ public class DietTrackerApiApplicationIT {
 
     }
 
-    @SuppressWarnings("null")
-    @Test
-    public void testPutMeal_GivenNullUserId() throws JSONException {
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/meals/1"),
-                HttpMethod.PUT,
-                new HttpEntity<>(
-                        "{\"mealTime\":\"LUNCH\"}",
-                        headers),
-                String.class);
-
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().contains("Meal creation/update failed because of invalid input."));
-        assertTrue(response.getBody().contains("userId field cannot be null"));
-
-    }
-
-    @SuppressWarnings("null")
     @Test
     public void testPutMeal_GivenMissingFields() throws JSONException {
         headers.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/meals/1"),
                 HttpMethod.PUT,
-                new HttpEntity<>(
-                        "{\"userId\":1,\"mealTime\":\"LUNCH\"}",
+                new HttpEntity<>("{\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
                         headers),
                 String.class);
 
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().contains("Meal creation/update failed because of invalid input."));
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        JSONAssert.assertEquals(
+                "{\"userId\":\"must not be null\"," +
+                        "\"mealDate\":\"must not be null\"}",
+                response.getBody(), true);
+    }
+
+    @Test
+    public void testPutMeal_GivenInvalidDTOEnumValue() throws JSONException {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/meals/1"),
+                HttpMethod.PUT,
+                new HttpEntity<>(
+                        "{\"userId\":1,\"mealDate\":\"1998-06-21\"," +
+                                "\"mealTime\":\"IDONTEXIST\",\"mealContent\":\"IAMNOTCONSIDERED\"}",
+                        headers),
+                String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        JSONAssert.assertEquals(
+                "{\"mealTime\":\"Invalid value for field 'mealTime': IDONTEXIST\"}",
+                response.getBody(), true);
 
     }
 
