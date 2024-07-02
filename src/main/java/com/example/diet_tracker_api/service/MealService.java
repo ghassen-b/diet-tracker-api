@@ -5,15 +5,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.diet_tracker_api.dto.MealInDTO;
-import com.example.diet_tracker_api.dto.MealOutDTO;
-import com.example.diet_tracker_api.exception.MealInvalidInputException;
 import com.example.diet_tracker_api.exception.MealNotFoundException;
-import com.example.diet_tracker_api.mapper.MealMapper;
 import com.example.diet_tracker_api.model.Meal;
 import com.example.diet_tracker_api.repository.MealDAO;
 
-import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 
 /*
@@ -24,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class MealService {
     private final MealDAO mealDAO;
-
-    private final MealMapper mealMapper;
 
     /**
      * Looks for a potential Meal in the DAO and returns it.
@@ -45,9 +38,8 @@ public class MealService {
      * @return List of MealOutDTO representations of all Meals
      */
     @Transactional(readOnly = true)
-    public List<MealOutDTO> getAllMeals() {
-        List<Meal> listMeals = (List<Meal>) mealDAO.findAll();
-        return mealMapper.fromEntity(listMeals);
+    public List<Meal> getAllMeals() {
+        return mealDAO.findAll();
     }
 
     /**
@@ -57,8 +49,8 @@ public class MealService {
      * @return Matching MealOutDTO representation of the matching instance.
      */
     @Transactional(readOnly = true)
-    public MealOutDTO getMealById(Long id) {
-        return mealMapper.fromEntity(findMealById(id));
+    public Meal getMealById(Long id) {
+        return findMealById(id);
     }
 
     /*
@@ -69,15 +61,9 @@ public class MealService {
      * 
      * @param mealInDTO MealInDTO containing the information to be used.
      * @return MealOutDTO representation of the created instance.
-     * @throws MealInvalidInputException if the provided input is not valid.
      */
-    public MealOutDTO createMeal(MealInDTO mealInDTO) {
-        try {
-            Meal newMeal = mealDAO.save(mealMapper.fromInDTO(mealInDTO));
-            return mealMapper.fromEntity(newMeal);
-        } catch (ConstraintViolationException e) {
-            throw new MealInvalidInputException(mealInDTO, e.getMessage());
-        }
+    public Meal createMeal(Meal meal) {
+        return mealDAO.save(meal);
     }
 
     /**
@@ -96,13 +82,19 @@ public class MealService {
      * @param id        Meal id in the DB.
      * @param mealInDTO MealInDTO object containing the wanted new information.
      * @return MealOutDTO representation of the edited instance.
+     * @throws MealNotFoundException if id does not match an existing Meal in the
+     *                               DB.
      */
-    public MealOutDTO editMealById(Long id, MealInDTO mealInDTO) {
-        return mealMapper.fromEntity(
-                mealDAO.save(
-                        mealMapper.editFromInDTO(
-                                mealInDTO,
-                                findMealById(id))));
+    public Meal editMealById(Long id, Meal meal) {
+        // Checking that the provided id matches an instance in the DB.
+        if (!mealDAO.existsById(id)) {
+            throw new MealNotFoundException(id);
+        }
+        ;
+        // The provided Meal does not contain an Id value (null).
+        // By setting it, we are asking the DAO to override the existing item.
+        meal.setId(id);
+        return mealDAO.save(meal);
     }
 
 }

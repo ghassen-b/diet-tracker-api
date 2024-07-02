@@ -1,7 +1,9 @@
 package com.example.diet_tracker_api.api;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.diet_tracker_api.dto.MealInDTO;
 import com.example.diet_tracker_api.dto.MealOutDTO;
+import com.example.diet_tracker_api.model.Meal;
 import com.example.diet_tracker_api.service.MealService;
 
 import jakarta.validation.Valid;
@@ -32,6 +35,10 @@ public class MealController {
      * Diet Service autowired object.
      */
     private final MealService mealService;
+    /**
+     * Automatic mapper
+     */
+    private final ModelMapper modelMapper;
 
     /**
      * Endpoint to get all saved meals.
@@ -40,7 +47,7 @@ public class MealController {
      */
     @GetMapping()
     public List<MealOutDTO> getAllMeals() {
-        return mealService.getAllMeals();
+        return mealService.getAllMeals().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     /**
@@ -51,8 +58,7 @@ public class MealController {
      */
     @GetMapping(value = "/{id}")
     public MealOutDTO getMealById(@PathVariable("id") Long id) {
-        return mealService.getMealById(id);
-
+        return convertToDTO(mealService.getMealById(id));
     }
 
     /**
@@ -64,8 +70,7 @@ public class MealController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(code = HttpStatus.CREATED)
     public MealOutDTO createMeal(@Valid @RequestBody MealInDTO mealInDTO) {
-        return mealService.createMeal(mealInDTO);
-
+        return convertToDTO(mealService.createMeal(convertToEntity(mealInDTO)));
     }
 
     /**
@@ -77,7 +82,6 @@ public class MealController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMealById(@PathVariable("id") Long id) {
         mealService.deleteMealById(id);
-
     }
 
     /**
@@ -92,7 +96,15 @@ public class MealController {
     @ResponseStatus(HttpStatus.CREATED)
     public MealOutDTO editMealById(@PathVariable("id") Long id, @Valid @RequestBody MealInDTO mealInDTO) {
         // TODO: return the instance ID, not the full DTO
-        return mealService.editMealById(id, mealInDTO);
+        return convertToDTO(mealService.editMealById(id, convertToEntity(mealInDTO)));
 
+    }
+
+    protected MealOutDTO convertToDTO(Meal meal) {
+        return modelMapper.map(meal, MealOutDTO.class);
+    }
+
+    protected Meal convertToEntity(MealInDTO mealInDTO) {
+        return modelMapper.map(mealInDTO, Meal.class);
     }
 }

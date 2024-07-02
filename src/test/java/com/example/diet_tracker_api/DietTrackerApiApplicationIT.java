@@ -2,9 +2,11 @@ package com.example.diet_tracker_api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONParser;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -111,12 +113,17 @@ public class DietTrackerApiApplicationIT {
     @Test
     @DirtiesContext
     public void testPostMeal() throws JSONException {
+        // Saving the previous state of GET /meals
+        var initialGetAllMealsJsonArray = (JSONArray) JSONParser.parseJSON(restTemplate.exchange(
+                createURLWithPort("/meals"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String.class).getBody());
+
         headers.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/meals"),
                 HttpMethod.POST,
                 new HttpEntity<>(
-                        "{\"userId\":1,\"mealDate\":\"1998-06-21\",\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
+                        "{\"mealEaterId\":1,\"mealDate\":\"1998-06-21\",\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
                         headers),
                 String.class);
 
@@ -124,6 +131,17 @@ public class DietTrackerApiApplicationIT {
         String expected = "{\"mealEater\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"email\":\"john.doe@gmail.com\"},"
                 + "\"mealDate\":\"1998-06-21\",\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}";
         JSONAssert.assertEquals(expected, response.getBody(), true);
+
+        // Making here now that the new item was really created, not overriding an
+        // existing one
+        var newGetAllMealsJsonArray = (JSONArray) JSONParser.parseJSON(restTemplate.exchange(
+                createURLWithPort("/meals"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String.class).getBody());
+        
+        assertEquals(initialGetAllMealsJsonArray.length() + 1, newGetAllMealsJsonArray.length());
+
+        JSONAssert.assertEquals(expected,
+                newGetAllMealsJsonArray.get(newGetAllMealsJsonArray.length() - 1).toString(), true);
 
     }
 
@@ -146,7 +164,7 @@ public class DietTrackerApiApplicationIT {
                 createURLWithPort("/meals"),
                 HttpMethod.POST,
                 new HttpEntity<>(
-                        "{\"userId\":42,\"mealDate\":\"1998-06-21\",\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
+                        "{\"mealEaterId\":42,\"mealDate\":\"1998-06-21\",\"mealTime\":\"DINNER\",\"mealContent\":\"VEGAN\"}",
                         headers),
                 String.class);
 
@@ -166,7 +184,7 @@ public class DietTrackerApiApplicationIT {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         JSONAssert.assertEquals(
-                "{\"userId\":\"must not be null\"," +
+                "{\"mealEaterId\":\"must not be null\"," +
                         "\"mealDate\":\"must not be null\"}",
                 response.getBody(), true);
     }
@@ -178,7 +196,7 @@ public class DietTrackerApiApplicationIT {
                 createURLWithPort("/meals"),
                 HttpMethod.POST,
                 new HttpEntity<>(
-                        "{\"userId\":1,\"mealDate\":\"1998-06-21\"," +
+                        "{\"mealEaterId\":1,\"mealDate\":\"1998-06-21\"," +
                                 "\"mealTime\":\"IDONTEXIST\",\"mealContent\":\"IAMNOTCONSIDERED\"}",
                         headers),
                 String.class);
@@ -216,7 +234,7 @@ public class DietTrackerApiApplicationIT {
                 createURLWithPort("/meals/1"),
                 HttpMethod.PUT,
                 new HttpEntity<>(
-                        "{\"userId\":1,\"mealDate\":\"1998-06-21\",\"mealTime\":\"LUNCH\",\"mealContent\":\"VEGAN\"}",
+                        "{\"mealEaterId\":1,\"mealDate\":\"1998-06-21\",\"mealTime\":\"LUNCH\",\"mealContent\":\"VEGAN\"}",
                         headers),
                 String.class);
 
@@ -239,7 +257,7 @@ public class DietTrackerApiApplicationIT {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         JSONAssert.assertEquals(
-                "{\"userId\":\"must not be null\"," +
+                "{\"mealEaterId\":\"must not be null\"," +
                         "\"mealDate\":\"must not be null\"}",
                 response.getBody(), true);
     }
@@ -251,7 +269,7 @@ public class DietTrackerApiApplicationIT {
                 createURLWithPort("/meals/1"),
                 HttpMethod.PUT,
                 new HttpEntity<>(
-                        "{\"userId\":1,\"mealDate\":\"1998-06-21\"," +
+                        "{\"mealEaterId\":1,\"mealDate\":\"1998-06-21\"," +
                                 "\"mealTime\":\"IDONTEXIST\",\"mealContent\":\"IAMNOTCONSIDERED\"}",
                         headers),
                 String.class);
@@ -261,6 +279,21 @@ public class DietTrackerApiApplicationIT {
                 "{\"mealTime\":\"Invalid value for field 'mealTime': IDONTEXIST\"}",
                 response.getBody(), true);
 
+    }
+
+    @Test
+    public void testPutMeal_GivenUnknownMealId() throws JSONException {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/meals/42"),
+                HttpMethod.PUT,
+                new HttpEntity<>(
+                        "{\"mealEaterId\":1,\"mealDate\":\"1998-06-21\",\"mealTime\":\"LUNCH\",\"mealContent\":\"VEGAN\"}",
+                        headers),
+                String.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Meal with id=42 not found", response.getBody());
     }
 
 }

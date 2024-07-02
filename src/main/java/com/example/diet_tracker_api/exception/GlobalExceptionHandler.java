@@ -3,6 +3,7 @@ package com.example.diet_tracker_api.exception;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.modelmapper.MappingException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,19 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    /**
+     * Handler for all the exceptions raised by the Model Mapper instance.
+     */
+    @ExceptionHandler(value = { MappingException.class })
+    public ResponseEntity<Object> handleMappingExceptionExceptions(RuntimeException exception) {
+        Throwable cause = exception.getCause();
+        if (cause instanceof UserNotFoundException) {
+            return new ResponseEntity<>(cause.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        else {
+            return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
     /**
      * Handler for all NOT_FOUND-related exceptions.
      */
