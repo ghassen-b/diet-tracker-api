@@ -24,6 +24,13 @@ import com.example.diet_tracker_api.dto.MealOutDTO;
 import com.example.diet_tracker_api.model.Meal;
 import com.example.diet_tracker_api.service.MealService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -48,7 +55,11 @@ public class MealController {
      * 
      * @return List of MealOutDTO representations for all saved meals.
      */
-    @GetMapping()
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "A list of Meal details returned", content = {
+                    @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = MealOutDTO.class))) }) })
+    @Operation(summary = "Get a list of all meals")
     public List<MealOutDTO> getUserMeals(@AuthenticationPrincipal Jwt jwt) {
         var userId = jwt.getSubject();
         return mealService.getUserMeals(userId).stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -60,8 +71,15 @@ public class MealController {
      * @param id Meal id in the DB
      * @return MealOutDTO representation of the matching Meal.
      */
-    @GetMapping(value = "/{id}")
-    public MealOutDTO getUserMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id) {
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Meal details returned", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = MealOutDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid id format", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Meal not found", content = @Content) })
+    @Operation(summary = "Get the details of a meal")
+    public MealOutDTO getUserMealById(@AuthenticationPrincipal Jwt jwt,
+            @PathVariable() @Parameter(name = "id", description = "Meal id", example = "1") Long id) {
         var userId = jwt.getSubject();
         return convertToDTO(mealService.getUserMealById(userId, id));
     }
@@ -72,7 +90,12 @@ public class MealController {
      * @param mealInDTO Input to use to create the Meal instance.
      * @return MealOutDTO representation of the created Meal.
      */
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Meal created", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = MealIdDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content) })
+    @Operation(summary = "Create a meal from the provided input")
     @ResponseStatus(code = HttpStatus.CREATED)
     public MealIdDTO createMeal(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MealInDTO mealInDTO) {
         var userId = jwt.getSubject();
@@ -85,8 +108,13 @@ public class MealController {
      * @param id
      */
     @DeleteMapping(value = "/{id}")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Meal deleted"),
+            @ApiResponse(responseCode = "404", description = "Meal not found", content = @Content) })
+    @Operation(summary = "Delete a meal")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id) {
+    public void deleteMealById(@AuthenticationPrincipal Jwt jwt,
+            @PathVariable() @Parameter(name = "id", description = "Meal id", example = "1") Long id) {
         var userId = jwt.getSubject();
         mealService.deleteMealById(userId, id);
     }
@@ -99,9 +127,15 @@ public class MealController {
      * @return MealOutDTO representation of the edited instance.
      * 
      */
-    @PutMapping(value = "/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Meal edited", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = MealIdDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content) })
+    @Operation(summary = "Edit the details of a meal")
     @ResponseStatus(HttpStatus.CREATED)
-    public MealIdDTO editMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id,
+    public MealIdDTO editMealById(@AuthenticationPrincipal Jwt jwt,
+            @PathVariable() @Parameter(name = "id", description = "Meal id", example = "1") Long id,
             @Valid @RequestBody MealInDTO mealInDTO) {
         var userId = jwt.getSubject();
         return convertToIdDTO(mealService.editMealById(userId, id, convertToEntity(mealInDTO)));

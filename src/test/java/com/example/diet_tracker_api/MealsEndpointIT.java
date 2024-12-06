@@ -86,6 +86,25 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     }
 
     @Test
+    void shouldGetResults_WhenAccessingApiDocWithoutAuthToken() throws JSONException {
+        given()
+                .when()
+                .get("/api-docs")
+                .then()
+                .statusCode(HttpStatus.OK.value());
+        given()
+                .when()
+                .get("/swagger-ui.html")
+                .then()
+                .statusCode(HttpStatus.OK.value());
+        given()
+                .when()
+                .get("/swagger-ui/index.html")
+                .then()
+                .statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
     void shouldGetResults_WhenGetMealsWithToken() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()

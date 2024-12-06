@@ -1,5 +1,6 @@
 package com.example.diet_tracker_api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MealIdDTO {
+    @Schema(description = "Meal Id", example = "42")
     private Long id;
 }

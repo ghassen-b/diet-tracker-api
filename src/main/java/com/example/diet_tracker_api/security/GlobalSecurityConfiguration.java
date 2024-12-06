@@ -15,7 +15,12 @@ public class GlobalSecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // All requests need to be authenticated
+                // Acces to OpenAPI doc does not required authentication
+                .authorizeHttpRequests(
+                        authorizeRequests -> authorizeRequests
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs*/**")
+                                .permitAll())
+                // All other requests need to be authenticated
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
                 .build();
