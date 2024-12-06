@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.example.diet_tracker_api.dto.MealIdDTO;
 import com.example.diet_tracker_api.dto.MealInDTO;
 import com.example.diet_tracker_api.dto.MealOutDTO;
 import com.example.diet_tracker_api.model.Meal;
@@ -43,6 +44,7 @@ public class MealControllerTest {
 
     Jwt mockJwt = Mockito.mock(Jwt.class);
     Meal mockMeal = Mockito.mock(Meal.class);
+    MealIdDTO mockMealIdDTO = Mockito.mock(MealIdDTO.class);
     MealOutDTO mockMealOut = Mockito.mock(MealOutDTO.class);
     MealInDTO mockMealIn = Mockito.mock(MealInDTO.class);
     String mockUserId = "userId";
@@ -69,14 +71,14 @@ public class MealControllerTest {
     }
 
     @Test
-    void whenCreateMeal_givenUserOwnsMeal_thenMealReturned() {
+    void whenCreateMeal_givenUserOwnsMeal_thenMealIdReturned() {
         Mockito.when(mockJwt.getSubject()).thenReturn(mockUserId);
         Mockito.when(mockMealService.createMeal(mockUserId, mockMeal)).thenReturn(mockMeal);
         Mockito.when(mockModelMapper.map(mockMealIn, Meal.class)).thenReturn(mockMeal);
-        Mockito.when(mockModelMapper.map(mockMeal, MealOutDTO.class)).thenReturn(mockMealOut);
+        Mockito.when(mockModelMapper.map(mockMeal, MealIdDTO.class)).thenReturn(mockMealIdDTO);
 
         var output = mealController.createMeal(mockJwt, mockMealIn);
-        assertEquals(mockMealOut, output);
+        assertEquals(mockMealIdDTO, output);
     }
 
     @Test
@@ -92,9 +94,9 @@ public class MealControllerTest {
         Mockito.when(mockJwt.getSubject()).thenReturn(mockUserId);
         Mockito.when(mockMealService.editMealById(mockUserId, mockMealId, mockMeal)).thenReturn(mockMeal);
         Mockito.when(mockModelMapper.map(mockMealIn, Meal.class)).thenReturn(mockMeal);
-        Mockito.when(mockModelMapper.map(mockMeal, MealOutDTO.class)).thenReturn(mockMealOut);
+        Mockito.when(mockModelMapper.map(mockMeal, MealIdDTO.class)).thenReturn(mockMealIdDTO);
 
         var output = mealController.editMealById(mockJwt, mockMealId, mockMealIn);
-        assertEquals(mockMealOut, output);
+        assertEquals(mockMealIdDTO, output);
     }
 }

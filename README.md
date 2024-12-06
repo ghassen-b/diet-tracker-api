@@ -33,7 +33,7 @@ The app needs these components to be deployed:
 To deploy these components, you simply need to go to the `dev-tools` directory and run:
 
 ```
-docker-compose up -d
+docker-compose up --wait
 ```
 
 Then to remove them:

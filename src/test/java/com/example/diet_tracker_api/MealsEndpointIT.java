@@ -130,6 +130,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .post("/meals");
         response.then()
                 .statusCode(HttpStatus.CREATED.value())
+                .body("size()", is(1)) // Only the Id is returned
                 .body("id", is(3));
 
         // Get all meals to check that it's there
@@ -171,7 +172,9 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .when()
                 .put("/meals/1");
         response.then()
-                .statusCode(HttpStatus.CREATED.value());
+                .statusCode(HttpStatus.CREATED.value())
+                .body("size()", is(1)) // Only the Id is returned
+                .body("id", is(1));
 
         // Get all meals to check that we haven't created a new meal
         response = given(authenticatedRequestSpecification)

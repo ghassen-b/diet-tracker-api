@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.diet_tracker_api.dto.MealIdDTO;
 import com.example.diet_tracker_api.dto.MealInDTO;
 import com.example.diet_tracker_api.dto.MealOutDTO;
 import com.example.diet_tracker_api.model.Meal;
@@ -73,10 +74,9 @@ public class MealController {
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(code = HttpStatus.CREATED)
-    public MealOutDTO createMeal(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MealInDTO mealInDTO) {
+    public MealIdDTO createMeal(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MealInDTO mealInDTO) {
         var userId = jwt.getSubject();
-        // TODO: return the instance ID, not the full DTO
-        return convertToDTO(mealService.createMeal(userId, convertToEntity(mealInDTO)));
+        return convertToIdDTO(mealService.createMeal(userId, convertToEntity(mealInDTO)));
     }
 
     /**
@@ -101,16 +101,19 @@ public class MealController {
      */
     @PutMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public MealOutDTO editMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id,
+    public MealIdDTO editMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id,
             @Valid @RequestBody MealInDTO mealInDTO) {
         var userId = jwt.getSubject();
-        // TODO: return the instance ID, not the full DTO
-        return convertToDTO(mealService.editMealById(userId, id, convertToEntity(mealInDTO)));
+        return convertToIdDTO(mealService.editMealById(userId, id, convertToEntity(mealInDTO)));
 
     }
 
     protected MealOutDTO convertToDTO(Meal meal) {
         return modelMapper.map(meal, MealOutDTO.class);
+    }
+
+    protected MealIdDTO convertToIdDTO(Meal meal) {
+        return modelMapper.map(meal, MealIdDTO.class);
     }
 
     protected Meal convertToEntity(MealInDTO mealInDTO) {
