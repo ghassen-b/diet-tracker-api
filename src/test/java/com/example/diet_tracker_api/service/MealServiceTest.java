@@ -11,8 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.TransactionSystemException;
 
@@ -32,7 +32,7 @@ public class MealServiceTest {
         }
     }
 
-    @MockBean
+    @MockitoBean
     private MealDAO mockMealDAO;
 
     @Autowired
@@ -40,32 +40,34 @@ public class MealServiceTest {
 
     private final Long id = 42L;
 
+    private final String userId = "someUser";
+
     @Test
     void testGetAllMeals() {
         var mockMeal = Mockito.mock(Meal.class);
 
-        Mockito.when(mockMealDAO.findAll()).thenReturn(List.of(mockMeal));
+        Mockito.when(mockMealDAO.findByUserId(userId)).thenReturn(List.of(mockMeal));
 
-        assertEquals(List.of(mockMeal), mealService.getAllMeals());
+        assertEquals(List.of(mockMeal), mealService.getUserMeals(userId));
     }
 
     @Test
     void givenMealExists_whenGetMealById_thenReturned() {
         var mockMeal = Mockito.mock(Meal.class);
 
-        Mockito.when(mockMealDAO.findById(id)).thenReturn(Optional.of(mockMeal));
+        Mockito.when(mockMealDAO.findByIdAndUserId(id, userId)).thenReturn(Optional.of(mockMeal));
 
-        assertEquals(mockMeal, mealService.getMealById(id));
+        assertEquals(mockMeal, mealService.getUserMealById(userId, id));
     }
 
     @Test
     void givenMealDoesNotExist_whenGetMealById_thenExceptionRaised() {
-        Mockito.when(mockMealDAO.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(mockMealDAO.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
         assertThrows(
                 MealNotFoundException.class,
                 () -> {
-                    mealService.getMealById(id);
+                    mealService.getUserMealById(userId, id);
                 },
                 String.format("Meal with id=%d not found", id));
     }
@@ -77,7 +79,7 @@ public class MealServiceTest {
 
         Mockito.when(mockMealDAO.save(mockInputMeal)).thenReturn(mockCreatedMeal);
 
-        assertEquals(mockCreatedMeal, mealService.createMeal(mockInputMeal));
+        assertEquals(mockCreatedMeal, mealService.createMeal(userId, mockInputMeal));
     }
 
     @Test
@@ -88,7 +90,7 @@ public class MealServiceTest {
         assertThrows(
                 TransactionSystemException.class,
                 () -> {
-                    mealService.createMeal(mockMeal);
+                    mealService.createMeal(userId, mockMeal);
                 },
                 String.format("toto"));
 
@@ -98,22 +100,21 @@ public class MealServiceTest {
     void givenMealExists_whenDeleteMealById_thenMealDeleted() {
         var mockMeal = Mockito.mock(Meal.class);
 
-        Mockito.when(mockMealDAO.findById(id)).thenReturn(Optional.of(mockMeal));
+        Mockito.when(mockMealDAO.findByIdAndUserId(id, userId)).thenReturn(Optional.of(mockMeal));
 
-        mealService.deleteMealById(id);
+        mealService.deleteMealById(userId, id);
 
         Mockito.verify(mockMealDAO).delete(mockMeal);
-
     }
 
     @Test
     void givenMealDoesNotExist_whenDeleteMealById_thenExceptionRaised() {
-        Mockito.when(mockMealDAO.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(mockMealDAO.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
         assertThrows(
                 MealNotFoundException.class,
                 () -> {
-                    mealService.deleteMealById(id);
+                    mealService.deleteMealById(userId, id);
                 },
                 String.format("Meal with id=%d not found", id));
     }
@@ -121,16 +122,15 @@ public class MealServiceTest {
     @Test
     void givenDAODeleteFails_whenDeleteMealById_thenExceptionIsNotCatched() {
         var mockMeal = Mockito.mock(Meal.class);
-        Mockito.when(mockMealDAO.findById(id)).thenReturn(Optional.of(mockMeal));
+        Mockito.when(mockMealDAO.findByIdAndUserId(id, userId)).thenReturn(Optional.of(mockMeal));
         Mockito.doThrow(new TransactionSystemException("toto")).when(mockMealDAO).delete(mockMeal);
 
         assertThrows(
                 TransactionSystemException.class,
                 () -> {
-                    mealService.deleteMealById(id);
+                    mealService.deleteMealById(userId, id);
                 },
                 String.format("toto"));
-
     }
 
     @Test
@@ -138,10 +138,10 @@ public class MealServiceTest {
         var mockMealInput = Mockito.mock(Meal.class);
         var mockMealSaved = Mockito.mock(Meal.class);
 
-        Mockito.when(mockMealDAO.existsById(id)).thenReturn(true);
+        Mockito.when(mockMealDAO.existsByIdAndUserId(id, userId)).thenReturn(true);
         Mockito.when(mockMealDAO.save(mockMealInput)).thenReturn(mockMealSaved);
 
-        assertEquals(mockMealSaved, mealService.editMealById(id, mockMealInput));
+        assertEquals(mockMealSaved, mealService.editMealById(userId, id, mockMealInput));
 
         Mockito.verify(mockMealInput).setId(id);
 
@@ -149,12 +149,12 @@ public class MealServiceTest {
 
     @Test
     void givenMealDoesNotExist_whenEditMealById_thenCorrectExceptionThrown() {
-        Mockito.when(mockMealDAO.existsById(id)).thenReturn(false);
+        Mockito.when(mockMealDAO.existsByIdAndUserId(id, userId)).thenReturn(false);
 
         assertThrows(
                 MealNotFoundException.class,
                 () -> {
-                    mealService.editMealById(id, Mockito.mock(Meal.class));
+                    mealService.editMealById(userId, id, Mockito.mock(Meal.class));
                 },
                 String.format("Meal with id=%d not found", id));
 
@@ -162,14 +162,14 @@ public class MealServiceTest {
 
     @Test
     void givenDAOSaveFails_whenEditMealById_thenExceptionIsNotCatched() {
-        Mockito.when(mockMealDAO.existsById(id)).thenReturn(true);
+        Mockito.when(mockMealDAO.existsByIdAndUserId(id, userId)).thenReturn(true);
         var mockMeal = Mockito.mock(Meal.class);
         Mockito.when(mockMealDAO.save(mockMeal)).thenThrow(new TransactionSystemException("toto"));
 
         assertThrows(
                 TransactionSystemException.class,
                 () -> {
-                    mealService.editMealById(id, mockMeal);
+                    mealService.editMealById(userId, id, mockMeal);
                 },
                 String.format("toto"));
 

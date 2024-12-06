@@ -30,18 +30,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(value = { MappingException.class })
     public ResponseEntity<Object> handleMappingExceptionExceptions(RuntimeException exception) {
-        Throwable cause = exception.getCause();
-        if (cause instanceof UserNotFoundException) {
-            return new ResponseEntity<>(cause.getMessage(), HttpStatus.NOT_FOUND);
-        }
-        else {
-            return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
     /**
      * Handler for all NOT_FOUND-related exceptions.
      */
-    @ExceptionHandler(value = { MealNotFoundException.class, UserNotFoundException.class })
+    @ExceptionHandler(value = { MealNotFoundException.class })
     @ResponseStatus(code = HttpStatus.NOT_FOUND)
     @ResponseBody
     public String handleItemNotFoundExceptions(RuntimeException exception) {

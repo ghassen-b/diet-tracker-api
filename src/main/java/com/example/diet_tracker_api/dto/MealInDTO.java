@@ -20,9 +20,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MealInDTO {
     @NotNull
-    private Long mealEaterId;
-
-    @NotNull
     private LocalDate mealDate;
 
     @NotNull

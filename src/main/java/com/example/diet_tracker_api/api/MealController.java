@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,13 +43,14 @@ public class MealController {
     private final ModelMapper modelMapper;
 
     /**
-     * Endpoint to get all saved meals.
+     * Endpoint to get all saved meals for the current user.
      * 
      * @return List of MealOutDTO representations for all saved meals.
      */
     @GetMapping()
-    public List<MealOutDTO> getAllMeals() {
-        return mealService.getAllMeals().stream().map(this::convertToDTO).collect(Collectors.toList());
+    public List<MealOutDTO> getUserMeals(@AuthenticationPrincipal Jwt jwt) {
+        var userId = jwt.getSubject();
+        return mealService.getUserMeals(userId).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     /**
@@ -57,8 +60,9 @@ public class MealController {
      * @return MealOutDTO representation of the matching Meal.
      */
     @GetMapping(value = "/{id}")
-    public MealOutDTO getMealById(@PathVariable("id") Long id) {
-        return convertToDTO(mealService.getMealById(id));
+    public MealOutDTO getUserMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id) {
+        var userId = jwt.getSubject();
+        return convertToDTO(mealService.getUserMealById(userId, id));
     }
 
     /**
@@ -69,8 +73,10 @@ public class MealController {
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(code = HttpStatus.CREATED)
-    public MealOutDTO createMeal(@Valid @RequestBody MealInDTO mealInDTO) {
-        return convertToDTO(mealService.createMeal(convertToEntity(mealInDTO)));
+    public MealOutDTO createMeal(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MealInDTO mealInDTO) {
+        var userId = jwt.getSubject();
+        // TODO: return the instance ID, not the full DTO
+        return convertToDTO(mealService.createMeal(userId, convertToEntity(mealInDTO)));
     }
 
     /**
@@ -80,8 +86,9 @@ public class MealController {
      */
     @DeleteMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMealById(@PathVariable("id") Long id) {
-        mealService.deleteMealById(id);
+    public void deleteMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id) {
+        var userId = jwt.getSubject();
+        mealService.deleteMealById(userId, id);
     }
 
     /**
@@ -94,9 +101,11 @@ public class MealController {
      */
     @PutMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public MealOutDTO editMealById(@PathVariable("id") Long id, @Valid @RequestBody MealInDTO mealInDTO) {
+    public MealOutDTO editMealById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") Long id,
+            @Valid @RequestBody MealInDTO mealInDTO) {
+        var userId = jwt.getSubject();
         // TODO: return the instance ID, not the full DTO
-        return convertToDTO(mealService.editMealById(id, convertToEntity(mealInDTO)));
+        return convertToDTO(mealService.editMealById(userId, id, convertToEntity(mealInDTO)));
 
     }
 

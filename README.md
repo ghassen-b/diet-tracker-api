@@ -1,23 +1,54 @@
-# diet-tracker-api
-REST API that helps you track your diet content.
+# Diet Tracker API
 
-# Deploying an external PostgreSQL DB 
+This is a REST API that will help you keep track of your diet content on a daily basis. 
 
-You need a running MySQL/MariaDB. It will be accessed locally on port 3306.
+It can help you answer the following questions: "How frequently am I eating meat? Is my diet really *mostly vegetarian?, ..."
 
-For instance:
+## Behind the code
+
+This project started as a side-project for me as I was learning SpringBoot.
+
+As a result, I tried to stick to the following principles throughout the project development:
+
+* The code should always be clean: no dead code, no useless items
+* The code should be clearly documented: inline documentation, READMEs, API documentation (to be implemented)
+* Testing:
+    - Unit tests should be *really* fast to run: avoid starting the whole application in order to test one single service #LongLiveTheMocks
+    - Unit tests coverage should be close to 100%
+    - Integration tests should avoid mocks: when you reach the IT step, you should run the application in real life-like scenarios
+    - Integration tests coverage should *also* be close to 100%
+* Application deployment should be as easy as possible
+
+# Deploying the application
+
+## Requirements
+
+The app needs these components to be deployed:
+* An external MySQL DB (it will be accessed locally on port 3306).
+
+* An external Keycloak instance (it will be accessed locally on port 8080). A diet-app-realm realm is used by the app.
+
+### docker-compose deployment
+
+To deploy these components, you simply need to go to the `dev-tools` directory and run:
 
 ```
-docker run --name test-api-db -e MYSQL_USER=myuser -e MYSQL_PASSWORD=mypassword -e MYSQL_DATABASE=api_diet_db -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306 mysql:8
+docker-compose up -d
 ```
 
-Connecting to it (e.g. for debugging & checking):
+Then to remove them:
 
 ```
-docker exec -it test-api-db mysql -u myuser -p
+docker-compose down
 ```
 
-... then type the password
+## Starting the app
+
+Once the required third-party tools are deployed, simple run the following line from the current directory:
+
+```
+mvn spring-boot:run
+```
 
 # Testing locally
 
@@ -32,11 +63,3 @@ mvn test
 ```
 mvn verify
 ```
-
-# Playing with the API
-
-You can load the provided Diet Tracker API.postman_collection.json in POsstman to play around with the API.
-You will need to set two environment variables:
-- IP
-- PORT
-

@@ -28,8 +28,8 @@ public class MealService {
      * @return Matching Meal instance.
      * @throws MealNotFoundException if the id does not match any item.
      */
-    private Meal findMealById(Long id) {
-        return mealDAO.findById(id).orElseThrow(() -> new MealNotFoundException(id));
+    private Meal findUserMealById(String userId, Long id) {
+        return mealDAO.findByIdAndUserId(id, userId).orElseThrow(() -> new MealNotFoundException(userId, id));
     }
 
     /**
@@ -38,8 +38,8 @@ public class MealService {
      * @return List of MealOutDTO representations of all Meals
      */
     @Transactional(readOnly = true)
-    public List<Meal> getAllMeals() {
-        return mealDAO.findAll();
+    public List<Meal> getUserMeals(String userId) {
+        return mealDAO.findByUserId(userId);
     }
 
     /**
@@ -49,12 +49,10 @@ public class MealService {
      * @return Matching MealOutDTO representation of the matching instance.
      */
     @Transactional(readOnly = true)
-    public Meal getMealById(Long id) {
-        return findMealById(id);
+    public Meal getUserMealById(String userId, Long id) {
+        return findUserMealById(userId, id);
     }
 
-    /*
-    */
     /**
      * Creates a new meal based on the input MealInDTO instance.
      * Returns the created Meal's MealOutDTO.
@@ -62,7 +60,8 @@ public class MealService {
      * @param mealInDTO MealInDTO containing the information to be used.
      * @return MealOutDTO representation of the created instance.
      */
-    public Meal createMeal(Meal meal) {
+    public Meal createMeal(String userId, Meal meal) {
+        meal.setUserId(userId);
         return mealDAO.save(meal);
     }
 
@@ -71,8 +70,8 @@ public class MealService {
      * 
      * @param id Meal id in the DB.
      */
-    public void deleteMealById(Long id) {
-        mealDAO.delete(findMealById(id));
+    public void deleteMealById(String userId, Long id) {
+        mealDAO.delete(findUserMealById(userId, id));
     }
 
     /**
@@ -85,15 +84,17 @@ public class MealService {
      * @throws MealNotFoundException if id does not match an existing Meal in the
      *                               DB.
      */
-    public Meal editMealById(Long id, Meal meal) {
-        // Checking that the provided id matches an instance in the DB.
-        if (!mealDAO.existsById(id)) {
-            throw new MealNotFoundException(id);
+    public Meal editMealById(String userId, Long id, Meal meal) {
+        // Checking that the provided id & userId matches an instance in the DB.
+        if (!mealDAO.existsByIdAndUserId(id, userId)) {
+            throw new MealNotFoundException(userId, id);
         }
         ;
         // The provided Meal does not contain an Id value (null).
         // By setting it, we are asking the DAO to override the existing item.
         meal.setId(id);
+        
+        meal.setUserId(userId);
         return mealDAO.save(meal);
     }
 

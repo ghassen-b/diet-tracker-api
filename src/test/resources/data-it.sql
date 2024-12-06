@@ -1,2 +1,2 @@
-INSERT INTO user(email, first_name, last_name) VALUES ('john.doe@gmail.com', 'John', 'Doe');
-INSERT INTO meal (meal_content, meal_date, meal_eater_id, meal_time) VALUES ('VEGETARIAN', '1968-05-04', 1, 'LUNCH');
+INSERT INTO meal (meal_content, meal_date, user_id, meal_time) VALUES ('VEGETARIAN', '1968-05-04', '5669d3a8-edd4-4d9d-a737-7e9cb21fa974', 'LUNCH');
+INSERT INTO meal (meal_content, meal_date, user_id, meal_time) VALUES ('CHICKEN', '1578-04-14', 'another-user', 'DINNER');
