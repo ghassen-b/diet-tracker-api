@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import java.security.KeyStore;
 import java.time.LocalDate;
 
 import org.json.JSONException;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,6 +22,8 @@ import com.example.diet_tracker_api.dto.MealInDTO;
 import com.example.diet_tracker_api.model.MealContent;
 import com.example.diet_tracker_api.model.MealTime;
 
+import io.restassured.RestAssured;
+import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -29,13 +34,24 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     private RequestSpecification authenticatedRequestSpecification;
     private RequestSpecification anonymousRequestSpecification;
 
+    @LocalServerPort
+    private int port;
+
+    private String createURLWithPort(String uri) {
+        return "https://localhost:" + port + uri;
+    }
+
+
     @BeforeEach
-    void setupRequestionSpecification() {
+    void setupRequestSpecification() {
         anonymousRequestSpecification = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON);
         authenticatedRequestSpecification = anonymousRequestSpecification
                 .header("Authorization", "Bearer " + getToken());
+        // RestAssured.config = RestAssured.config().sslConfig(new SSLConfig()
+        //         .keyStore("src/test/resources/keystore/it-keystore.p12", "itsecret")
+        //         .trustStore("src/test/resources/keystore/it-keystore.p12", "itsecret"));
     }
 
     @Test
@@ -264,10 +280,13 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     @Test
     void shouldGet400_WhenGetMealByIdWithIdFormat() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
+        .trustStore("src/test/resources/keystore/it-keystore.jks", "itsecret")
                 .when()
-                .get("/meals/noAnInt");
+                .get("https://localhost:" + port + "/meals/noAnInt");
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value());
+        // TODO: this test passes event if SSL setup is wrong for ITs, add a more
+        // precise check
     }
 
     @Test
