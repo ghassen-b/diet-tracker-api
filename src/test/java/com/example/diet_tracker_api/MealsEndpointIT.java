@@ -3,14 +3,17 @@ package com.example.diet_tracker_api;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 
 import org.json.JSONException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,6 +22,7 @@ import com.example.diet_tracker_api.dto.MealInDTO;
 import com.example.diet_tracker_api.model.MealContent;
 import com.example.diet_tracker_api.model.MealTime;
 
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -29,8 +33,15 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     private RequestSpecification authenticatedRequestSpecification;
     private RequestSpecification anonymousRequestSpecification;
 
+    @LocalServerPort
+    private int port;
+
+    private String createURLWithPort(String uri) {
+        return "https://localhost:" + port + uri;
+    }
+
     @BeforeEach
-    void setupRequestionSpecification() {
+    void setupRequestSpecification() {
         anonymousRequestSpecification = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON);
@@ -38,11 +49,17 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .header("Authorization", "Bearer " + getToken());
     }
 
+    @BeforeAll
+    static void setupCommonItems() {
+        // Relax HTTPS validation for all requests as we are using self-signed certificates
+        RestAssured.useRelaxedHTTPSValidation();
+    }
+
     @Test
     void shouldGetUnauthorized_WhenGetMealsWithoutAuthToken() {
         given()
                 .when()
-                .get("/meals")
+                .get(createURLWithPort("/meals"))
                 .then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -51,7 +68,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGetUnauthorized_WhenGetMealByIdWithoutAuthToken() {
         given()
                 .when()
-                .get("/meals/1")
+                .get(createURLWithPort("/meals/1"))
                 .then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -60,7 +77,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGetUnauthorized_WhenDeleteMealByIdWithoutAuthToken() {
         given()
                 .when()
-                .delete("/meals/1")
+                .delete(createURLWithPort("/meals/1"))
                 .then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -70,7 +87,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         given()
                 .body(MealInDTO.builder().build())
                 .when()
-                .put("/meals/1")
+                .put(createURLWithPort("/meals/1"))
                 .then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -80,26 +97,39 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         given()
                 .body(MealInDTO.builder().build())
                 .when()
-                .post("/meals/1")
+                .post(createURLWithPort("/meals/1"))
                 .then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void shouldGet400_WhenUsingHTTPEndpoint() {
+        Response response = given()
+                .body(MealInDTO.builder().build())
+                .when()
+                .get("/api-docs"); // no https, testing with http
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value());
+
+        var expected = "This combination of host and port requires TLS.";
+        assertTrue(response.getBody().asString().contains(expected));
     }
 
     @Test
     void shouldGetResults_WhenAccessingApiDocWithoutAuthToken() throws JSONException {
         given()
                 .when()
-                .get("/api-docs")
+                .get(createURLWithPort("/api-docs"))
                 .then()
                 .statusCode(HttpStatus.OK.value());
         given()
                 .when()
-                .get("/swagger-ui.html")
+                .get(createURLWithPort("/swagger-ui.html"))
                 .then()
                 .statusCode(HttpStatus.OK.value());
         given()
                 .when()
-                .get("/swagger-ui/index.html")
+                .get(createURLWithPort("/swagger-ui/index.html"))
                 .then()
                 .statusCode(HttpStatus.OK.value());
     }
@@ -108,7 +138,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGetResults_WhenGetMealsWithToken() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals");
+                .get(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("size()", is(1));
@@ -127,7 +157,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGetItem_WhenGetMealByIdWithToken() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals/1");
+                .get(createURLWithPort("/meals/1"));
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("userId", equalTo("5669d3a8-edd4-4d9d-a737-7e9cb21fa974"))
@@ -146,7 +176,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                         .mealDate(LocalDate.of(2020, 11, 29))
                         .build())
                 .when()
-                .post("/meals");
+                .post(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("size()", is(1)) // Only the Id is returned
@@ -155,7 +185,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         // Get all meals to check that it's there
         response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals");
+                .get(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("size()", is(2));
@@ -166,14 +196,14 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldDeleteItem_WhenDeleteMealWithToken() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()
-                .delete("/meals/1");
+                .delete(createURLWithPort("/meals/1"));
         response.then()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
         // Get all meals to check that it's there
         response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals");
+                .get(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("size()", is(0));
@@ -189,7 +219,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                         .mealDate(LocalDate.of(2020, 11, 29))
                         .build())
                 .when()
-                .put("/meals/1");
+                .put(createURLWithPort("/meals/1"));
         response.then()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("size()", is(1)) // Only the Id is returned
@@ -198,7 +228,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         // Get all meals to check that we haven't created a new meal
         response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals");
+                .get(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("size()", is(1));
@@ -206,7 +236,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         // Get the meal's content to check it
         response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals/1");
+                .get(createURLWithPort("/meals/1"));
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("userId", equalTo("5669d3a8-edd4-4d9d-a737-7e9cb21fa974"))
@@ -224,7 +254,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                         .mealDate(LocalDate.of(2020, 11, 29))
                         .build())
                 .when()
-                .put("/meals/42");
+                .put(createURLWithPort("/meals/42"));
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -238,7 +268,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                         .mealDate(LocalDate.of(2020, 11, 29))
                         .build())
                 .when()
-                .put("/meals/2"); // This meal id belongs to another user
+                .put(createURLWithPort("/meals/2")); // This meal id belongs to another user
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -247,7 +277,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGet404_WhenGetMealByIdNotFound() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals/42");
+                .get(createURLWithPort("/meals/42"));
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -256,7 +286,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGet404_WhenGetMealOwnedByOtherUser() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals/2");
+                .get(createURLWithPort("/meals/2"));
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -265,9 +295,10 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     void shouldGet400_WhenGetMealByIdWithIdFormat() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()
-                .get("/meals/noAnInt");
+                .get(createURLWithPort("/meals/noAnInt"));
         response.then()
-                .statusCode(HttpStatus.BAD_REQUEST.value());
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("id", is("Invalid value for parameter 'id': noAnInt"));
     }
 
     @Test
@@ -276,7 +307,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .body(MealInDTO.builder()
                         .build())
                 .when()
-                .post("/meals");
+                .post(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("mealTime", is("must not be null"))
@@ -293,7 +324,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                         "\"mealTime\": \"notATime\"" +
                         "}")
                 .when()
-                .post("/meals");
+                .post(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("size()", is(1)) // The error raised only shows the first invalid field
@@ -307,7 +338,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                         "\"anyField\": \"anything\"" +
                         "")
                 .when()
-                .post("/meals");
+                .post(createURLWithPort("/meals"));
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("error", is("Malformed JSON request"));

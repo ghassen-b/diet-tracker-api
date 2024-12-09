@@ -68,6 +68,6 @@ mvn verify
 
 Once you deploy the application, you can access the openAPI (Swagger) documentation through:
 
-* `http://localhost:8090/api-docs`: provides a JSON-formatted specification
+* `https://localhost:8090/api-docs`: provides a JSON-formatted specification
 
-* `http://localhost:8090/swagger-ui.html`: provides a user-friendly UI to navigate the documentation
+* `https://localhost:8090/swagger-ui.html`: provides a user-friendly UI to navigate the documentation
