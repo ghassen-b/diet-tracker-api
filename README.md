@@ -1,10 +1,10 @@
-# Diet Tracker API
+# Diet Tracker API :pizza:
 
 This is a REST API that will help you keep track of your diet content on a daily basis. 
 
 It can help you answer the following questions: "How frequently am I eating meat? Is my diet really *mostly vegetarian?, ..."
 
-## Behind the code
+## Behind the code :face_in_clouds:
 
 This project started as a side-project for me as I was learning SpringBoot.
 
@@ -19,7 +19,7 @@ As a result, I tried to stick to the following principles throughout the project
     - Integration tests coverage should *also* be close to 100%
 * Application deployment should be as easy as possible
 
-# Deploying the application
+# Deploying the application :flight_departure:
 
 ## Requirements
 
@@ -30,7 +30,7 @@ The app needs these components to be deployed:
 
 You can deploy the app & its dependencies in two (main) ways:
 
-## Containerized application
+## Containerized application :package:
 
 This is best suited when you simply want to deploy the app and interact with it through the API's endpoints.
 
@@ -52,7 +52,7 @@ If you deployed the app once, then made some changes to the source code, and wan
 ```
 docker-compose up --wait --build
 ```
-## Easier to debug deployment
+## Easier to debug deployment  :hammer_and_wrench: / :mag_right:
 
 If you want to be able to run the application locally, or run it in "debug" mode through your IDE, the containerized deployment is not the best (even though it's possible).
 
@@ -80,7 +80,7 @@ If you only want to package the application as a Docker image, run
 docker build -t diet-tracker-api:latest .
 ```
 
-## Cleanup
+## Cleanup :wastebasket:
 
 To cleanup the deployed containers, run
 
@@ -88,7 +88,7 @@ To cleanup the deployed containers, run
 docker-compose down
 ```
 
-# Running the tests
+# Running the tests :white_check_mark:
 
 ## Running unit tests
 
@@ -102,7 +102,7 @@ mvn test
 mvn verify
 ```
 
-# OpenAPI Documentation
+# OpenAPI Documentation :open_book:
 
 Once you deploy the application, you can access the openAPI (Swagger) documentation through:
 

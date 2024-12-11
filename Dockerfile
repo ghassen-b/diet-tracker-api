@@ -22,4 +22,4 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=optional:classpath:/,optional:file:config/"]
+ENTRYPOINT exec java -jar app.jar --spring.config.location=optional:classpath:/,optional:file:config/

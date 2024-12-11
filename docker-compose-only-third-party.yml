@@ -13,19 +13,22 @@ services:
     image: quay.io/keycloak/keycloak:26.0
     container_name: keycloak
     ports: 
-    - 8080:8080
-    - 9000:9000
+    - 8443:8443
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
+      - KC_HTTPS_CERTIFICATE_FILE=/opt/keycloak/config/keycloak.crt
+      - KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/config/keycloak.key
       - DB_ADDR=mysql
       - DB_VENDOR=mysql
       - DB_DATABASE=keycloak
       - DB_USER=myuser
       - DB_PASSWORD=mypassword
     volumes:
-      - ./dev-tools//keycloak/dev-keycloak-data.json:/opt/keycloak/data/import/dev-keycloak-data.json
+      - ./dev-tools/keycloak/dev-keycloak-data.json:/opt/keycloak/data/import/dev-keycloak-data.json
+      - ./dev-tools/certs/localhost/keycloak.crt:/opt/keycloak/config/keycloak.crt
+      - ./dev-tools/certs/localhost/keycloak.key:/opt/keycloak/config/keycloak.key
     depends_on:
       - mysql
     command: ["start-dev", "--import-realm"]
