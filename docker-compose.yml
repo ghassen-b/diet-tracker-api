@@ -9,10 +9,7 @@ services:
       - MYSQL_PASSWORD=mypassword
       - MYSQL_DATABASE=api_diet_db
       - MYSQL_ROOT_PASSWORD=root
-#     volumes: # TODO: mount MySQL DB data folder locally so that it is not lost everytime
-#       - mysql-volume:/var/lib/postgresql/data
-#       - ./infra/postgres:/docker-entrypoint-initdb.d
-# TODO: use an optimized image: https://www.keycloak.org/server/containers#_writing_your_optimized_keycloak_containerfile
+  
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: keycloak
@@ -23,13 +20,15 @@ services:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_HEALTH_ENABLED=true
+      - KC_HOSTNAME=http://keycloak:8080/ # The app calls KC based on its service name. The issuer then needs to be the same address (rather than localhost)
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true 
       - DB_ADDR=mysql
       - DB_VENDOR=mysql
       - DB_DATABASE=keycloak
-      - DB_USER=myuser # TODO: change this to a specific user on the DB
+      - DB_USER=myuser
       - DB_PASSWORD=mypassword
     volumes:
-      - ./keycloak/dev-keycloak-data.json:/opt/keycloak/data/import/dev-keycloak-data.json
+      - ./dev-tools/keycloak/dev-keycloak-data.json:/opt/keycloak/data/import/dev-keycloak-data.json
     depends_on:
     - mysql
     command: ["start-dev", "--import-realm"]
@@ -37,12 +36,27 @@ services:
       test:
         [
           "CMD-SHELL",
-          # keycloak images does not contain curl: this is a work around it !
+          # keycloak images does not contain curl: this is a workaround to curl the health endpoint !
           'exec 3<>/dev/tcp/localhost/9000; echo -e "GET /health/ready HTTP/1.1\nhost: localhost:9000\n" >&3; timeout --preserve-status 1 cat <&3 | grep -m 1 status | grep -m 1 UP; ERROR=$?; exec 3<&-; exec 3>&-; exit $ERROR'
         ]
       interval: 5s
       timeout: 2s
       retries: 20
-    
-# volumes:
-#   mysql-volume:
+  
+  diet-tracker-api:
+    image: diet-tracker-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: diet-tracker-api
+    ports: 
+    - 8090:8090
+    volumes:
+      - "${CONFIG_PATH}:/app/config/"
+    environment:
+      - SPRING_PROFILES_ACTIVE=containerized
+    depends_on:
+      mysql:
+        condition: service_started
+      keycloak:
+        condition: service_healthy

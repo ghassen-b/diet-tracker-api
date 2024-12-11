@@ -28,29 +28,67 @@ The app needs these components to be deployed:
 
 * An external Keycloak instance (it will be accessed locally on port 8080). A diet-app-realm realm is used by the app.
 
-### docker-compose deployment
+You can deploy the app & its dependencies in two (main) ways:
 
-To deploy these components, you simply need to go to the `dev-tools` directory and run:
+## Containerized application
+
+This is best suited when you simply want to deploy the app and interact with it through the API's endpoints.
+
+You simply need to run:
 
 ```
 docker-compose up --wait
 ```
 
-Then to remove them:
+This will
+- Deploy a MySQL instance
+- Deploy a Keycloak instance and prepopulate it with a default user
+- Package the application into a Docker image (if an image tagged `diet-tracker-api:latest` is not present in your local Docker registry)
+- Run the app and configure it to interact with the previously deployed MySQL & Keycloak containers
+- Fill the app's database with some default values
+
+If you deployed the app once, then made some changes to the source code, and want to re-package it before redeploying it, don't forget to run 
 
 ```
-docker-compose down
+docker-compose up --wait --build
+```
+## Easier to debug deployment
+
+If you want to be able to run the application locally, or run it in "debug" mode through your IDE, the containerized deployment is not the best (even though it's possible).
+
+You should first deploy the third-party components the app depends on:
+
+```
+docker-compose up -f docker-compose-only-third-party.yml --wait
 ```
 
-## Starting the app
+This will
+- Deploy a MySQL instance
+- Deploy a Keycloak instance and prepopulate it with a default user
 
-Once the required third-party tools are deployed, simple run the following line from the current directory:
+You can then start the app manually, through your IDE, or by running
 
 ```
 mvn spring-boot:run
 ```
 
-# Testing locally
+## Docker image generation only
+
+If you only want to package the application as a Docker image, run
+
+```
+docker build -t diet-tracker-api:latest .
+```
+
+## Cleanup
+
+To cleanup the deployed containers, run
+
+```
+docker-compose down
+```
+
+# Running the tests
 
 ## Running unit tests
 
