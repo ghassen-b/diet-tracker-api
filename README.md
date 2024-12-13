@@ -18,6 +18,9 @@ As a result, I tried to stick to the following principles throughout the project
     - Integration tests should avoid mocks: when you reach the IT step, you should run the application in real life-like scenarios
     - Integration tests coverage should *also* be close to 100%
 * Application deployment should be as easy as possible
+* Git messages should always be well formatted & clear:
+    - A short subject line (<=50 chars), containing a topic
+    - A more precise, technical description in the commit message body
 
 # Deploying the application :flight_departure:
 
