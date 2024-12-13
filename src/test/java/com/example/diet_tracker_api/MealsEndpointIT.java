@@ -135,6 +135,16 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     }
 
     @Test
+    void shouldGetStatus_WhenAccessingActuatorHealthWithoutAuTokeb() throws JSONException {
+        given()
+                .when()
+                .get(createURLWithPort("/actuator/health"))
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .body("status", is("UP"));
+    }
+
+    @Test
     void shouldGetResults_WhenGetMealsWithToken() throws JSONException {
         Response response = given(authenticatedRequestSpecification)
                 .when()

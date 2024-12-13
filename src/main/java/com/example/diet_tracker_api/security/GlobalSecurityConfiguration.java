@@ -20,6 +20,11 @@ public class GlobalSecurityConfiguration {
                         authorizeRequests -> authorizeRequests
                                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs*/**")
                                 .permitAll())
+                // Acces to the actuator endpoints do not require authentication
+                .authorizeHttpRequests(
+                        authorizeRequests -> authorizeRequests
+                                .requestMatchers("/actuator/health")
+                                .permitAll())
                 // All other requests need to be authenticated
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))

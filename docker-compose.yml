@@ -65,6 +65,12 @@ services:
       - "./dev-tools/certs/keycloak/truststore.jks:/app/truststore.jks"
     environment:
       - SPRING_PROFILES_ACTIVE=containerized
+    healthcheck:
+      test: "curl --fail --silent --insecure https://localhost:8090/actuator/health | grep UP || exit 1"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     depends_on:
       mysql:
         condition: service_healthy

@@ -15,6 +15,9 @@ RUN mvn package -DskipTests
 # Stage 2: Create the runtime image
 FROM openjdk:21-jdk-slim
 
+# Install curl (needed to run the healthcheck)
+RUN apt update && apt install curl -y
+
 # Set the working directory in the container
 WORKDIR /app
 
