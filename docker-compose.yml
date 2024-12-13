@@ -9,6 +9,11 @@ services:
       - MYSQL_PASSWORD=mypassword
       - MYSQL_DATABASE=api_diet_db
       - MYSQL_ROOT_PASSWORD=root
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -33,7 +38,8 @@ services:
       - ./dev-tools/certs/keycloak/keycloak.crt:/opt/keycloak/config/keycloak.crt
       - ./dev-tools/certs/keycloak/keycloak.key:/opt/keycloak/config/keycloak.key
     depends_on:
-    - mysql
+      mysql:
+        condition: service_healthy
     command: ["start-dev", "--import-realm"]
     healthcheck:
       test:
@@ -61,6 +67,6 @@ services:
       - SPRING_PROFILES_ACTIVE=containerized
     depends_on:
       mysql:
-        condition: service_started
+        condition: service_healthy
       keycloak:
         condition: service_healthy
