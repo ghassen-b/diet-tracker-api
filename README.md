@@ -1,3 +1,16 @@
+
+# TODO: issue: 
+- when running from backend-api folder using mvn springboot:run, custom.ssl.truststore needs ../dev-tools...
+- when running from VSCode, it runs from the repo root, so no need for ../
+
+Other issue: today the server's TLS keystore is the one commited on git, even when running in docker
+--> should be able to mount a keystore to use in the docker-compose
+
+Then where ot place dev-specific items like the keystore & the trustore ? General question to be answered
+
+# TODO 2: 
+move mvnw & mvn properties within backend-api
+
 # Diet Tracker API :pizza:
 
 This is a REST API that will help you keep track of your diet content on a daily basis. 
