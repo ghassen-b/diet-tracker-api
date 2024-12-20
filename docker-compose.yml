@@ -52,10 +52,10 @@ services:
       timeout: 2s
       retries: 20
   
-  diet-tracker-api:
-    image: diet-tracker-api:latest
+  diet-tracker-backend-api:
+    image: diet-tracker-backend-api:latest
     build:
-      context: .
+      context: ./backend-api
       dockerfile: Dockerfile
     container_name: diet-tracker-api
     ports: 

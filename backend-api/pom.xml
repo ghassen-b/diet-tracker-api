@@ -12,8 +12,8 @@
     <groupId>com.example</groupId>
     <artifactId>diet-tracker-api</artifactId>
     <version>0.1.1</version>
-    <name>diet-tracker-api</name>
-    <description>Demo project for Spring Boot</description>
+    <name>diet-tracker-backend-api</name>
+    <description>Backend for Diet Tracker App</description>
     <properties>
         <java.version>17</java.version>
     </properties>
