@@ -72,11 +72,13 @@
             <version>6.4.1</version>
         </dependency>
 
-        <dependency>
+        <!--~~(org.springframework.boot:spring-boot-starter-security failed. Unable to download metadata. Tried repositories:
+https://repo.maven.apache.org/maven2: Connect timed out)~~>--><dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        <dependency>
+        <!--~~(org.springframework.boot:spring-boot-starter-oauth2-resource-server failed. Unable to download metadata. Tried repositories:
+https://repo.maven.apache.org/maven2: Connect timed out)~~>--><dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
@@ -92,15 +94,18 @@
             <version>3.0.0</version>
         </dependency>
 
-        <dependency>
+        <!--~~(org.springframework.boot:spring-boot-starter-data-jpa failed. Unable to download metadata. Tried repositories:
+https://repo.maven.apache.org/maven2: Connect timed out)~~>--><dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        <dependency>
+        <!--~~(org.springframework.boot:spring-boot-starter-validation failed. Unable to download metadata. Tried repositories:
+https://repo.maven.apache.org/maven2: Connect timed out)~~>--><dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-        <dependency>
+        <!--~~(org.springframework.boot:spring-boot-starter-web failed. Unable to download metadata. Tried repositories:
+https://repo.maven.apache.org/maven2: Connect timed out)~~>--><dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -115,7 +120,8 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
+        <!--~~(org.springframework.boot:spring-boot-starter-test failed. Unable to download metadata. Tried repositories:
+https://repo.maven.apache.org/maven2: Connect timed out)~~>--><dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
