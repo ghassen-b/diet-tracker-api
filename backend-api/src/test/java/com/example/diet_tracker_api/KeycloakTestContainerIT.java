@@ -45,7 +45,9 @@ public class KeycloakTestContainerIT {
             .withRealmImportFile(realmImportFile);
 
     /**
-     * Sets the jwt.issuer-uri property based on the KC TestContainer actual URL at runtime.
+     * Sets the jwt.issuer-uri property based on the KC TestContainer actual URL at
+     * runtime.
+     *
      * @param registry
      */
     @DynamicPropertySource

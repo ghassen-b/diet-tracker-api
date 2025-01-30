@@ -19,7 +19,7 @@ public class ModelMapperConfiguration {
 
     /**
      * Builds the model mapper bean with its custom configs.
-     * 
+     *
      * @return ModelMapper instance.
      */
     @Bean

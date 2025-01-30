@@ -23,21 +23,35 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Meal {
-
+    /**
+     * Auto-generated item id.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
+    /**
+     * Meal owner id.
+     */
     @NotNull
     private String userId;
 
+    /**
+     * Meal date.
+     */
     @NotNull
     private LocalDate mealDate;
 
+    /**
+     * Meal time.
+     */
     @NotNull
     @Enumerated(EnumType.STRING)
     private MealTime mealTime;
 
+    /**
+     * Meal content.
+     */
     @NotNull
     @Enumerated(EnumType.STRING)
     private MealContent mealContent;

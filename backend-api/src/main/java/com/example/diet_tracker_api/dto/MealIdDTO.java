@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/*
+/**
  * DTO used when we want to provide only the Meal id as an output.
  */
 @Data
@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MealIdDTO {
+    /**
+     * Meal id.
+     */
     @Schema(description = "Meal Id", example = "42")
     private Long id;
 }

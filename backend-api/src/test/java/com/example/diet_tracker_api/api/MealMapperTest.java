@@ -57,7 +57,7 @@ public class MealMapperTest {
     @Test
     void testMealOutDTOFromEntity() {
         var meal = Meal.builder()
-                .Id(42L)
+                .id(42L)
                 .userId("someUser")
                 .mealContent(MealContent.BEEF)
                 .mealDate(LocalDate.of(1900, 1, 1))

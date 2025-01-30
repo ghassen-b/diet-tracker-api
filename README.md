@@ -105,6 +105,14 @@ mvn test
 mvn verify
 ```
 
+## Running checkstyle
+
+```
+mvn checkstyle:check
+```
+
+Nota: this check is not linked to any other mvn phase for now.
+
 # OpenAPI Documentation :open_book:
 
 Once you deploy the application, you can access the openAPI (Swagger) documentation through:

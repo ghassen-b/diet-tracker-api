@@ -26,7 +26,7 @@ public class MealServiceTest {
     @TestConfiguration
     static class MealServiceTestContextConfiguration {
         @Bean
-        public MealService addTestMealService(MealDAO mockMealDAO) {
+        MealService addTestMealService(MealDAO mockMealDAO) {
             return new MealService(mockMealDAO) {
             };
         }

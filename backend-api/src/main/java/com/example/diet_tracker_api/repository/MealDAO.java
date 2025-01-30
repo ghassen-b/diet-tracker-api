@@ -12,27 +12,29 @@ import com.example.diet_tracker_api.model.Meal;
  */
 public interface MealDAO extends JpaRepository<Meal, Long> {
     /**
-     * Finds all meals whose userId column matches the provided userId value
-     * 
+     * Finds all meals whose userId column matches the provided userId value.
+     *
      * @param userId userId who created the Meal instance
      * @return List of Meals for the given userId
      */
-    public List<Meal> findByUserId(String userId);
+    List<Meal> findByUserId(String userId);
 
     /**
-     * Finds a given meal matching the (meal) id & userId
-     * @param id Meal id to match
+     * Finds a given meal matching the (meal) id & userId.
+     *
+     * @param id     Meal id to match
      * @param userId user id to match
      * @return The optional matching meal
      */
-    public Optional<Meal> findByIdAndUserId(Long id, String userId);
+    Optional<Meal> findByIdAndUserId(Long id, String userId);
 
     /**
-     * Finds whether a given meal matching the (meal) id & userId exists
-     * @param id Meal id to match
+     * Finds whether a given meal matching the (meal) id & userId exists.
+     *
+     * @param id     Meal id to match
      * @param userId user id to match
      * @return Whether the meal exists or not
      */
-    public Boolean existsByIdAndUserId(Long id, String userId);
+    Boolean existsByIdAndUserId(Long id, String userId);
 
 }

@@ -51,7 +51,8 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @BeforeAll
     static void setupCommonItems() {
-        // Relax HTTPS validation for all requests as we are using self-signed certificates
+        // Relax HTTPS validation for all requests as we are using self-signed
+        // certificates
         RestAssured.useRelaxedHTTPSValidation();
     }
 

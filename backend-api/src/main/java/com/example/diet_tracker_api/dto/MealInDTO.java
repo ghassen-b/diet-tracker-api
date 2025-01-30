@@ -20,14 +20,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MealInDTO {
+
+    /**
+     * Meal date.
+     */
     @NotNull
     @Schema(description = "Meal Date in Local Timezone", example = "2020-11-29")
     private LocalDate mealDate;
 
+    /**
+     * Meal time (lunch, etc.).
+     */
     @NotNull
     @Schema(description = "Meal Time", example = "LUNCH")
     private MealTime mealTime;
 
+    /**
+     * Meal content (beef, etc.).
+     */
     @NotNull
     @Schema(description = "Meal Content", example = "VEGETARIAN")
     private MealContent mealContent;

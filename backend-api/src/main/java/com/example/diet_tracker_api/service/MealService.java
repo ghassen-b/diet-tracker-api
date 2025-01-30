@@ -11,20 +11,24 @@ import com.example.diet_tracker_api.repository.MealDAO;
 
 import lombok.RequiredArgsConstructor;
 
-/*
+/**
  * Service in charge of handling all functional tasks to generate a Hello, World! message.
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class MealService {
+    /**
+     * Meal DAO.
+     */
     private final MealDAO mealDAO;
 
     /**
      * Looks for a potential Meal in the DAO and returns it.
      * Throws a MealNotFoundException if the element is not found.
-     * 
-     * @param id Meal id in the DB.
+     *
+     * @param userId User id to whom the meal belongs
+     * @param id     Meal id in the DB.
      * @return Matching Meal instance.
      * @throws MealNotFoundException if the id does not match any item.
      */
@@ -34,7 +38,8 @@ public class MealService {
 
     /**
      * Returns all registered Meal's as a List of MealOutDTO objects.
-     * 
+     *
+     * @param userId User id to whom the meal belongs
      * @return List of MealOutDTO representations of all Meals
      */
     @Transactional(readOnly = true)
@@ -44,8 +49,9 @@ public class MealService {
 
     /**
      * Looks for a potential Meal and returns it as a MealOutDTO object.
-     * 
-     * @param id Meal id in the DB.
+     *
+     * @param userId User id to whom the meal belongs
+     * @param id     Meal id in the DB.
      * @return Matching MealOutDTO representation of the matching instance.
      */
     @Transactional(readOnly = true)
@@ -56,8 +62,9 @@ public class MealService {
     /**
      * Creates a new meal based on the input MealInDTO instance.
      * Returns the created Meal's MealOutDTO.
-     * 
-     * @param mealInDTO MealInDTO containing the information to be used.
+     *
+     * @param userId User id to whom the meal belongs
+     * @param meal   Meal containing the information to be used.
      * @return MealOutDTO representation of the created instance.
      */
     public Meal createMeal(String userId, Meal meal) {
@@ -67,8 +74,9 @@ public class MealService {
 
     /**
      * Deletes the meal matching the provided Id.
-     * 
-     * @param id Meal id in the DB.
+     *
+     * @param userId Id of the user owning the meal.
+     * @param id     Meal id in the DB.
      */
     public void deleteMealById(String userId, Long id) {
         mealDAO.delete(findUserMealById(userId, id));
@@ -77,9 +85,10 @@ public class MealService {
     /**
      * Edits an existing meal found based on the provided Id with the input
      * MealInDTO instance.
-     * 
-     * @param id        Meal id in the DB.
-     * @param mealInDTO MealInDTO object containing the wanted new information.
+     *
+     * @param userId Id of the user owning the meal.
+     * @param id     Meal id in the DB.
+     * @param meal   Meal object containing the wanted new information.
      * @return MealOutDTO representation of the edited instance.
      * @throws MealNotFoundException if id does not match an existing Meal in the
      *                               DB.
@@ -89,11 +98,10 @@ public class MealService {
         if (!mealDAO.existsByIdAndUserId(id, userId)) {
             throw new MealNotFoundException(userId, id);
         }
-        ;
         // The provided Meal does not contain an Id value (null).
         // By setting it, we are asking the DAO to override the existing item.
         meal.setId(id);
-        
+
         meal.setUserId(userId);
         return mealDAO.save(meal);
     }

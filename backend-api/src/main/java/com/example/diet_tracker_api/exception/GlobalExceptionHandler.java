@@ -27,6 +27,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
      * Handler for all the exceptions raised by the Model Mapper instance.
+     *
+     * @param exception RuntimeException raised
+     * @return ResponseEntity with the exception msg
      */
     @ExceptionHandler(value = { MappingException.class })
     public ResponseEntity<Object> handleMappingExceptionExceptions(RuntimeException exception) {
@@ -35,6 +38,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
      * Handler for all NOT_FOUND-related exceptions.
+     *
+     * @param exception RuntimeException raised
+     * @return ResponseEntity with the exception msg
      */
     @ExceptionHandler(value = { MealNotFoundException.class })
     @ResponseStatus(code = HttpStatus.NOT_FOUND)
