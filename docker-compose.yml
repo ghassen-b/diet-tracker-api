@@ -46,7 +46,7 @@ services:
         ]
       interval: 5s
       timeout: 2s
-      retries: 20
+      retries: 30
   
   diet-tracker-backend-api:
     image: diet-tracker-backend-api:latest
