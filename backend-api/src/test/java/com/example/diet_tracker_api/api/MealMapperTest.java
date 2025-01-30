@@ -26,13 +26,13 @@ public class MealMapperTest {
     private MealService mockMealService;
 
     @Autowired
-    private MealController mealController;
+    private MealUserController mealUserController;
 
     @TestConfiguration
     static class MealMapperTestContextConfiguration {
         @Bean
-        public MealController addTestMealController(MealService mockMealService) {
-            return new MealController(mockMealService, new ModelMapperConfiguration().modelMapper()) {
+        MealUserController addTestMealUserController(MealService mockMealService) {
+            return new MealUserController(mockMealService, new ModelMapperConfiguration().modelMapper()) {
             };
         }
     }
@@ -45,7 +45,7 @@ public class MealMapperTest {
                 .mealTime(MealTime.BREAKFAST)
                 .build();
 
-        var output = mealController.convertToEntity(mealInDTO);
+        var output = mealUserController.convertToEntity(mealInDTO);
 
         assertEquals(mealInDTO.getMealContent(), output.getMealContent());
         assertEquals(mealInDTO.getMealDate(), output.getMealDate());
@@ -64,7 +64,7 @@ public class MealMapperTest {
                 .mealTime(MealTime.BREAKFAST)
                 .build();
 
-        var output = mealController.convertToDTO(meal);
+        var output = mealUserController.convertToDTO(meal);
         assertEquals(meal.getId(), output.getId());
         assertEquals(meal.getUserId(), output.getUserId());
         assertEquals(meal.getMealContent(), output.getMealContent());

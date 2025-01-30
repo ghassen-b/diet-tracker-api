@@ -1,6 +1,8 @@
 {
 	"id": "21ef657e-36f5-4d9c-a342-a053a1c97e98",
 	"realm": "diet-app-it-realm",
+	"displayName": "",
+	"displayNameHtml": "",
 	"notBefore": 0,
 	"defaultSignatureAlgorithm": "RS256",
 	"revokeRefreshToken": false,
@@ -51,6 +53,24 @@
 				"id": "74554032-d6c6-4836-97fa-f94ee469dcfd",
 				"name": "uma_authorization",
 				"description": "${role_uma_authorization}",
+				"composite": false,
+				"clientRole": false,
+				"containerId": "21ef657e-36f5-4d9c-a342-a053a1c97e98",
+				"attributes": {}
+			},
+			{
+				"id": "77dda9a7-be45-47e7-9f34-b5ebfeb7bbc9",
+				"name": "DIET_APP_ADMIN",
+				"description": "",
+				"composite": false,
+				"clientRole": false,
+				"containerId": "21ef657e-36f5-4d9c-a342-a053a1c97e98",
+				"attributes": {}
+			},
+			{
+				"id": "0a43d6ae-0e19-4f1a-bfc1-4b0c4991eaa6",
+				"name": "DIET_APP_USER",
+				"description": "",
 				"composite": false,
 				"clientRole": false,
 				"containerId": "21ef657e-36f5-4d9c-a342-a053a1c97e98",
@@ -405,7 +425,31 @@
 			]
 		}
 	},
-	"groups": [],
+	"groups": [
+		{
+			"id": "2f27c118-d691-428f-ad48-22351678eb64",
+			"name": "DIET_APP_ADMINS",
+			"path": "/DIET_APP_ADMINS",
+			"subGroups": [],
+			"attributes": {},
+			"realmRoles": [
+				"DIET_APP_ADMIN",
+				"DIET_APP_USER"
+			],
+			"clientRoles": {}
+		},
+		{
+			"id": "e14993c0-4588-4e33-bb96-58dbb227809c",
+			"name": "DIET_APP_USERS",
+			"path": "/DIET_APP_USERS",
+			"subGroups": [],
+			"attributes": {},
+			"realmRoles": [
+				"DIET_APP_USER"
+			],
+			"clientRoles": {}
+		}
+	],
 	"defaultRole": {
 		"id": "090bbee3-3ce7-481b-8596-313e98004256",
 		"name": "default-roles-diet-app-it-realm",
@@ -414,6 +458,9 @@
 		"clientRole": false,
 		"containerId": "21ef657e-36f5-4d9c-a342-a053a1c97e98"
 	},
+	"defaultGroups": [
+		"/DIET_APP_USERS"
+	],
 	"requiredCredentials": [
 		"password"
 	],
@@ -460,10 +507,36 @@
 	"webAuthnPolicyPasswordlessExtraOrigins": [],
 	"users": [
 		{
+			"id": "8c79eecb-69fe-4edf-a8b1-8cec870a6326",
+			"username": "diet-app-admin",
+			"firstName": "Jane",
+			"lastName": "Dae",
+			"email": "diet-app-admin@company.org",
+			"emailVerified": false,
+			"createdTimestamp": 1736943680430,
+			"enabled": true,
+			"totp": false,
+			"credentials": [
+				{
+                    "type": "password",
+                    "value": "diet-app-admin-password"
+                }
+			],
+			"disableableCredentialTypes": [],
+			"requiredActions": [],
+			"realmRoles": [
+				"default-roles-diet-app-it-realm"
+			],
+			"notBefore": 0,
+			"groups": [
+				"/DIET_APP_ADMINS"
+			]
+		},
+		{
 			"id": "5669d3a8-edd4-4d9d-a737-7e9cb21fa974",
 			"username": "diet-app-user",
-			"firstName": "FirstName",
-			"lastName": "LastName",
+			"firstName": "John",
+			"lastName": "Doe",
 			"email": "diet-app-user@company.org",
 			"emailVerified": false,
 			"createdTimestamp": 1732622962687,
@@ -481,7 +554,34 @@
 				"default-roles-diet-app-it-realm"
 			],
 			"notBefore": 0,
-			"groups": []
+			"groups": [
+				"/DIET_APP_USERS"
+			]
+		},
+		{
+			"id": "f45c1dab-332e-4e7e-b7e7-d17ed0f9b841",
+			"username": "not-a-diet-app-user",
+			"firstName": "Jacqueline",
+			"lastName": "Ramos",
+			"email": "not-a-diet-app-user@company.org",
+			"emailVerified": false,
+			"createdTimestamp": 1732622962687,
+			"enabled": true,
+			"totp": false,
+			"credentials": [
+				{
+                    "type": "password",
+                    "value": "not-a-diet-app-user-password"
+                }
+			],
+			"disableableCredentialTypes": [],
+			"requiredActions": [],
+			"realmRoles": [
+				"default-roles-diet-app-it-realm"
+			],
+			"notBefore": 0,
+			"groups": [
+			]
 		}
 	],
 	"scopeMappings": [
@@ -631,7 +731,8 @@
 			"protocol": "openid-connect",
 			"attributes": {
 				"realm_client": "false",
-				"client.use.lightweight.access.token.enabled": "true"
+				"client.use.lightweight.access.token.enabled": "true",
+				"post.logout.redirect.uris": "+"
 			},
 			"authenticationFlowBindingOverrides": {},
 			"fullScopeAllowed": true,
@@ -673,7 +774,8 @@
 			"frontchannelLogout": false,
 			"protocol": "openid-connect",
 			"attributes": {
-				"realm_client": "true"
+				"realm_client": "true",
+				"post.logout.redirect.uris": "+"
 			},
 			"authenticationFlowBindingOverrides": {},
 			"fullScopeAllowed": false,
@@ -724,6 +826,7 @@
 				"realm_client": "false",
 				"oidc.ciba.grant.enabled": "false",
 				"backchannel.logout.session.required": "true",
+				"post.logout.redirect.uris": "+",
 				"oauth2.device.authorization.grant.enabled": "false",
 				"backchannel.logout.revoke.offline.tokens": "false"
 			},
@@ -767,7 +870,8 @@
 			"frontchannelLogout": false,
 			"protocol": "openid-connect",
 			"attributes": {
-				"realm_client": "true"
+				"realm_client": "true",
+				"post.logout.redirect.uris": "+"
 			},
 			"authenticationFlowBindingOverrides": {},
 			"fullScopeAllowed": false,
@@ -975,6 +1079,7 @@
 					"config": {
 						"id.token.claim": "true",
 						"introspection.token.claim": "true",
+						"userinfo.token.claim": "true",
 						"access.token.claim": "true",
 						"claim.name": "organization",
 						"jsonType.label": "String",
@@ -1045,7 +1150,8 @@
 					"config": {
 						"id.token.claim": "true",
 						"introspection.token.claim": "true",
-						"access.token.claim": "true"
+						"access.token.claim": "true",
+						"userinfo.token.claim": "true"
 					}
 				}
 			]
@@ -1070,6 +1176,7 @@
 						"user.session.note": "AUTH_TIME",
 						"id.token.claim": "true",
 						"introspection.token.claim": "true",
+						"userinfo.token.claim": "true",
 						"access.token.claim": "true",
 						"claim.name": "auth_time",
 						"jsonType.label": "long"
@@ -1471,6 +1578,7 @@
 					"config": {
 						"introspection.token.claim": "true",
 						"multivalued": "true",
+						"userinfo.token.claim": "true",
 						"user.attribute": "foo",
 						"id.token.claim": "true",
 						"access.token.claim": "true",
@@ -2446,12 +2554,19 @@
 		"cibaExpiresIn": "120",
 		"cibaAuthRequestedUserHint": "login_hint",
 		"oauth2DeviceCodeLifespan": "600",
+		"clientOfflineSessionMaxLifespan": "0",
 		"oauth2DevicePollingInterval": "5",
 		"parRequestUriLifespan": "60",
+		"clientSessionIdleTimeout": "0",
+		"clientOfflineSessionIdleTimeout": "0",
 		"cibaInterval": "5",
-		"realmReusableOtpCode": "false"
+		"realmReusableOtpCode": "false",
+		"clientSessionMaxLifespan": "0",
+		"frontendUrl": "",
+		"organizationsEnabled": "false",
+		"acr.loa.map": "{}"
 	},
-	"keycloakVersion": "26.0.6",
+	"keycloakVersion": "26.0.7",
 	"userManagedAccessAllowed": false,
 	"organizationsEnabled": false,
 	"clientProfiles": {

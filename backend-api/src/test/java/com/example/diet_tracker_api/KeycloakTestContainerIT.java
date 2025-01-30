@@ -27,8 +27,21 @@ public class KeycloakTestContainerIT {
 
     static final String GRANT_TYPE_PASSWORD = "password";
     static final String CLIENT_ID = "diet-app-client";
-    static final String USERNAME = "diet-app-user";
-    static final String PASSWORD = "diet-app-user-password";
+    /**
+     * Not allowed (i.e. not having the user role; e.g. user from another app) user credentials.
+     */
+    static final String NONUSER_USERNAME = "not-a-diet-app-user";
+    static final String NONUSER_PASSWORD = "not-a-diet-app-user-password";
+    /**
+     * Simple user credentials.
+     */
+    static final String USER_USERNAME = "diet-app-user";
+    static final String USER_PASSWORD = "diet-app-user-password";
+    /**
+     * Admin user credentials.
+     */
+    static final String ADMIN_USERNAME = "diet-app-admin";
+    static final String ADMIN_PASSWORD = "diet-app-admin-password";
 
     static String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:26.0";
     static String realmImportFile = "/keycloak/it-keycloak-data.json";
@@ -62,10 +75,39 @@ public class KeycloakTestContainerIT {
     }
 
     /**
-     * Returns a token obtained from the KC deployed instance.
+     * Returns a user-only token obtained from the KC deployed instance.
+     *
      * @return
      */
-    protected String getToken() {
+    protected String getNonUserToken() {
+        return getToken(NONUSER_USERNAME, NONUSER_PASSWORD);
+    }
+
+    /**
+     * Returns a user-only token obtained from the KC deployed instance.
+     *
+     * @return
+     */
+    protected String getUserToken() {
+        return getToken(USER_USERNAME, USER_PASSWORD);
+    }
+
+    /**
+     * Returns an admin token obtained from the KC deployed instance.
+     *
+     * @return
+     */
+    protected String getAdminToken() {
+        return getToken(ADMIN_USERNAME, ADMIN_PASSWORD);
+    }
+
+    /**
+     * Returns a token obtained from the KC deployed instance, using the provided
+     * username & password.
+     *
+     * @return the token
+     */
+    protected String getToken(String username, String password) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -73,8 +115,8 @@ public class KeycloakTestContainerIT {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.put("grant_type", singletonList(GRANT_TYPE_PASSWORD));
         map.put("client_id", singletonList(CLIENT_ID));
-        map.put("username", singletonList(USERNAME));
-        map.put("password", singletonList(PASSWORD));
+        map.put("username", singletonList(username));
+        map.put("password", singletonList(password));
 
         String authServerUrl = oAuth2ResourceServerProperties.getJwt().getIssuerUri() +
                 "/protocol/openid-connect/token";

@@ -30,7 +30,9 @@ import io.restassured.specification.RequestSpecification;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("it")
 public class MealsEndpointIT extends KeycloakTestContainerIT {
-    private RequestSpecification authenticatedRequestSpecification;
+    private RequestSpecification authenticatedAdminRequestSpecification;
+    private RequestSpecification authenticatedUserRequestSpecification;
+    private RequestSpecification authenticatedNonUserRequestSpecification;
     private RequestSpecification anonymousRequestSpecification;
 
     @LocalServerPort
@@ -45,8 +47,12 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         anonymousRequestSpecification = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON);
-        authenticatedRequestSpecification = anonymousRequestSpecification
-                .header("Authorization", "Bearer " + getToken());
+        authenticatedUserRequestSpecification = given().spec(anonymousRequestSpecification)
+                .header("Authorization", "Bearer " + getUserToken());
+        authenticatedAdminRequestSpecification = given().spec(anonymousRequestSpecification)
+                .header("Authorization", "Bearer " + getAdminToken());
+        authenticatedNonUserRequestSpecification = given().spec(anonymousRequestSpecification)
+                .header("Authorization", "Bearer " + getNonUserToken());
     }
 
     @BeforeAll
@@ -55,6 +61,200 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         // certificates
         RestAssured.useRelaxedHTTPSValidation();
     }
+
+    /**
+     * Trying to access a simple user-allowed endpoint with an account with no role
+     */
+    @Test
+    void shouldGetForbidden_WhenGetMealsWithNonUserToken() {
+        given(authenticatedNonUserRequestSpecification)
+                .when()
+                .get(createURLWithPort("/meals"))
+                .then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void shouldGetItem_WhenGetMealByIdWithNonUserToken() throws JSONException {
+        Response response = given(authenticatedNonUserRequestSpecification)
+                .when()
+                .get(createURLWithPort("/meals/1"));
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void shouldGetItemId_WhenCreateMealWithNonUserToken() throws JSONException {
+        given(authenticatedNonUserRequestSpecification)
+                .body(MealInDTO.builder()
+                        .mealContent(MealContent.BEEF)
+                        .mealTime(MealTime.DINNER)
+                        .mealDate(LocalDate.of(2020, 11, 29))
+                        .build())
+                .when()
+                .post(createURLWithPort("/meals"))
+                .then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void shouldDeleteItem_WhenDeleteMealWithNonUserToken() throws JSONException {
+        given(authenticatedNonUserRequestSpecification)
+                .when()
+                .delete(createURLWithPort("/meals/1"))
+                .then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void shouldEditItem_WhenEditMealWithNonUserToken() throws JSONException {
+        given(authenticatedNonUserRequestSpecification)
+                .body(MealInDTO.builder()
+                        .mealContent(MealContent.BEEF)
+                        .mealTime(MealTime.DINNER)
+                        .mealDate(LocalDate.of(2020, 11, 29))
+                        .build())
+                .when()
+                .put(createURLWithPort("/meals/1")).then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    /**
+     * Tests of the admin endpoint with an admin account
+     */
+    @Test
+    void shouldGetUserMeals_WhenGetAdminMealsWithAdminUserToken() throws JSONException {
+        Response response = given(authenticatedAdminRequestSpecification)
+                .queryParam("userId", "another-user")
+                .when()
+                .get(createURLWithPort("/admin/meals"));
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", is(1));
+        var expected = "[ " +
+                "{  " +
+                "\"userId\": \"another-user\", " +
+                "\"mealDate\": \"1978-04-14\", " +
+                "\"mealTime\": \"DINNER\", " +
+                "\"mealContent\": \"CHICKEN\" " +
+                "} " +
+                "]";
+        JSONAssert.assertEquals(expected, response.getBody().asString(), false);
+    }
+
+    @Test
+    void shouldGetItem_WhenGetAdminMealByIdWithAdminUserToken() throws JSONException {
+        Response response = given(authenticatedAdminRequestSpecification)
+                .queryParam("userId", "another-user")
+                .when()
+                .get(createURLWithPort("/admin/meals/2"));
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("userId", equalTo("another-user"))
+                .body("mealDate", equalTo("1978-04-14"))
+                .body("mealTime", equalTo("DINNER"))
+                .body("mealContent", equalTo("CHICKEN"));
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldGetItemId_WhenCreateAdminMealWithAdminUserToken() throws JSONException {
+        Response response = given(authenticatedAdminRequestSpecification)
+                .queryParam("userId", "5669d3a8-edd4-4d9d-a737-7e9cb21fa974")
+                .body(MealInDTO.builder()
+                        .mealContent(MealContent.BEEF)
+                        .mealTime(MealTime.DINNER)
+                        .mealDate(LocalDate.of(2020, 11, 29))
+                        .build())
+                .when()
+                .post(createURLWithPort("/admin/meals"));
+        response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("size()", is(1)) // Only the Id is returned
+                .body("id", is(3));
+
+        // Get all meals as user to check that it's there
+        response = given(authenticatedUserRequestSpecification)
+                .when()
+                .get(createURLWithPort("/meals"));
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", is(2));
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldDeleteItem_WhenDeleteAdminMealWithAdminUserToken() throws JSONException {
+        Response response = given(authenticatedAdminRequestSpecification)
+                .queryParam("userId", "5669d3a8-edd4-4d9d-a737-7e9cb21fa974")
+                .when()
+                .delete(createURLWithPort("/admin/meals/1"));
+        response.then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+        // Get all meals to check that it's there
+        response = given(authenticatedUserRequestSpecification)
+                .when()
+                .get(createURLWithPort("/meals"));
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", is(0));
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldEditItem_WhenEditAdminMealWithAdminUserToken() throws JSONException {
+        Response response = given(authenticatedAdminRequestSpecification)
+                .queryParam("userId", "5669d3a8-edd4-4d9d-a737-7e9cb21fa974")
+                .body(MealInDTO.builder()
+                        .mealContent(MealContent.BEEF)
+                        .mealTime(MealTime.DINNER)
+                        .mealDate(LocalDate.of(2020, 11, 29))
+                        .build())
+                .when()
+                .put(createURLWithPort("/admin/meals/1"));
+        response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("size()", is(1)) // Only the Id is returned
+                .body("id", is(1));
+
+        // Get all meals as user to check that we haven't created a new meal
+        response = given(authenticatedUserRequestSpecification)
+                .when()
+                .get(createURLWithPort("/meals"));
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", is(1));
+
+        // Get the meal's content to check it
+        response = given(authenticatedUserRequestSpecification)
+                .when()
+                .get(createURLWithPort("/meals/1"));
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("userId", equalTo("5669d3a8-edd4-4d9d-a737-7e9cb21fa974"))
+                .body("mealDate", equalTo("2020-11-29"))
+                .body("mealTime", equalTo("DINNER"))
+                .body("mealContent", equalTo("BEEF"));
+    }
+
+    /**
+     * Trying to access an admin endpoint with a simple user account
+     * Nota: we should test the other /admin/meals/* methods
+     */
+    @Test
+    void shouldGetForbidden_WhenGetMealsAdminWithUserToken() {
+        given(authenticatedUserRequestSpecification)
+                .queryParam("userId", "blabla")
+                .when()
+                .get(createURLWithPort("/admin/meals"))
+                .then()
+                .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    /**
+     * Non-authenticated access to restricted endpoints related tests
+     */
 
     @Test
     void shouldGetUnauthorized_WhenGetMealsWithoutAuthToken() {
@@ -103,6 +303,9 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
+    /**
+     * HTTPS-related tests
+     */
     @Test
     void shouldGet400_WhenUsingHTTPEndpoint() {
         Response response = given()
@@ -116,6 +319,9 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
         assertTrue(response.getBody().asString().contains(expected));
     }
 
+    /**
+     * Unauthenticated endpoints tests
+     */
     @Test
     void shouldGetResults_WhenAccessingApiDocWithoutAuthToken() throws JSONException {
         given()
@@ -145,9 +351,12 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .body("status", is("UP"));
     }
 
+    /**
+     * Simple user endpoints tests
+     */
     @Test
     void shouldGetResults_WhenGetMealsWithToken() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals"));
         response.then()
@@ -166,7 +375,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGetItem_WhenGetMealByIdWithToken() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals/1"));
         response.then()
@@ -180,7 +389,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     @Test
     @DirtiesContext
     void shouldGetItemId_WhenCreateMealWithToken() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body(MealInDTO.builder()
                         .mealContent(MealContent.BEEF)
                         .mealTime(MealTime.DINNER)
@@ -194,7 +403,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .body("id", is(3));
 
         // Get all meals to check that it's there
-        response = given(authenticatedRequestSpecification)
+        response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals"));
         response.then()
@@ -205,14 +414,14 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     @Test
     @DirtiesContext
     void shouldDeleteItem_WhenDeleteMealWithToken() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .when()
                 .delete(createURLWithPort("/meals/1"));
         response.then()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
         // Get all meals to check that it's there
-        response = given(authenticatedRequestSpecification)
+        response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals"));
         response.then()
@@ -223,7 +432,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
     @Test
     @DirtiesContext
     void shouldEditItem_WhenEditMealWithToken() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body(MealInDTO.builder()
                         .mealContent(MealContent.BEEF)
                         .mealTime(MealTime.DINNER)
@@ -237,7 +446,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .body("id", is(1));
 
         // Get all meals to check that we haven't created a new meal
-        response = given(authenticatedRequestSpecification)
+        response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals"));
         response.then()
@@ -245,7 +454,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .body("size()", is(1));
 
         // Get the meal's content to check it
-        response = given(authenticatedRequestSpecification)
+        response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals/1"));
         response.then()
@@ -256,9 +465,12 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
                 .body("mealContent", equalTo("BEEF"));
     }
 
+    /**
+     * NOT_FOUND-related tests
+     */
     @Test
     void shouldGet404_WhenEditMealNotFound() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body(MealInDTO.builder()
                         .mealContent(MealContent.BEEF)
                         .mealTime(MealTime.DINNER)
@@ -272,7 +484,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGet404_WhenEditMealCreatedByOtherUser() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body(MealInDTO.builder()
                         .mealContent(MealContent.LAMB)
                         .mealTime(MealTime.DINNER)
@@ -286,7 +498,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGet404_WhenGetMealByIdNotFound() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals/42"));
         response.then()
@@ -295,16 +507,19 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGet404_WhenGetMealOwnedByOtherUser() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals/2"));
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
+    /**
+     * BAD_REQUEST-related tests
+     */
     @Test
     void shouldGet400_WhenGetMealByIdWithIdFormat() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .when()
                 .get(createURLWithPort("/meals/noAnInt"));
         response.then()
@@ -314,7 +529,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGet400_WhenCreateMealWithMissingField() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body(MealInDTO.builder()
                         .build())
                 .when()
@@ -328,7 +543,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGet400_WhenCreateMealWithInvalidField() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body("{" +
                         "\"mealDate\": \"notADate\"," +
                         "\"mealContent\": \"notAContent\"" +
@@ -344,7 +559,7 @@ public class MealsEndpointIT extends KeycloakTestContainerIT {
 
     @Test
     void shouldGet400_WhenCreateMealWithMalFormedJson() throws JSONException {
-        Response response = given(authenticatedRequestSpecification)
+        Response response = given(authenticatedUserRequestSpecification)
                 .body("{" +
                         "\"anyField\": \"anything\"" +
                         "")

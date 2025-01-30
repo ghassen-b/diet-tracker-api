@@ -1,1 +1,3 @@
-INSERT INTO meal (meal_content, meal_date, user_id, meal_time) VALUES ('VEGETARIAN', '1978-05-04', '5669d3a8-edd4-4d9d-a737-7e9cb21fa974', 'LUNCH');
+INSERT INTO meal (meal_content, meal_date, user_id, meal_time) VALUES ('VEGETARIAN', '1978-05-04', '5669d3a8-edd4-4d9d-a737-7e9cb21fa974', 'LUNCH'); -- belongs to diet-app-user
+INSERT INTO meal (meal_content, meal_date, user_id, meal_time) VALUES ('BEEF', '1878-06-03', '8c79eecb-69fe-4edf-a8b1-8cec870a6326', 'LUNCH'); -- belongs to diet-app-admin
+INSERT INTO meal (meal_content, meal_date, user_id, meal_time) VALUES ('BEEF', '1878-06-03', '7a4378b4-e9b3-40ae-8bdf-2bdc0d30f56e', 'LUNCH'); -- belongs to another, non-existing user
